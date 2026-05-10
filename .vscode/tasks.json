@@ -31,6 +31,40 @@
             }
         },
         {
+            "label": "upload",
+            "type": "shell",
+            "command": "cmake --build ${command:cmake.buildDirectory} --target upload",
+            "group": "build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": ["relative", "${command:cmake.buildDirectory}"]
+            },
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false,
+                "clear": true,
+                "panel": "shared",
+                "group": "build"
+            }
+        },
+        {
+            "label": "menuconfig",
+            "type": "shell",
+            "command": "/bin/bash",
+            "args": ["-c", "ninja -C ${command:cmake.buildDirectory} menuconfig"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "test",
             "type": "shell",
             "command": "make tests",

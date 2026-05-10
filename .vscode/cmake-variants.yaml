@@ -116,6 +116,26 @@ CONFIG:
       buildType: MinSizeRel
       settings:
         CONFIG: 3dr_ctrl-zero-h7-oem-revg_default
+    aerium_radian_h7_default:
+      short: aerium_radian_h7
+      buildType: MinSizeRel
+      settings:
+        CONFIG: aerium_radian_h7_default
+    aerium_radian_h7_bootloader:
+      short: aerium_radian_h7_bootloader
+      buildType: MinSizeRel
+      settings:
+        CONFIG: aerium_radian_h7_bootloader
+    aerium_radian_h7_rev_b_default:
+      short: aerium_radian_h7_rev_b
+      buildType: MinSizeRel
+      settings:
+        CONFIG: aerium_radian_h7_rev_b_default
+    aerium_radian_h7_rev_b_bootloader:
+      short: aerium_radian_h7u
+      buildType: MinSizeRel
+      settings:
+        CONFIG: aerium_radian_h7_rev_b_bootloader
     airmind_mindpx-v2_default:
       short: airmind_mindpx-v2
       buildType: MinSizeRel
