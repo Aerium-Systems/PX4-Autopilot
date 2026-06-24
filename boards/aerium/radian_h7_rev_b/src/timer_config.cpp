@@ -34,29 +34,21 @@
 #include <px4_arch/io_timer_hw_description.h>
 
 constexpr io_timers_t io_timers[MAX_IO_TIMERS] = {
-    // index‑0 ─ TIM3  : DMA1 / Stream‑2 / Channel‑5  (unchanged)
-    initIOTimer(Timer::Timer3,  DMA{DMA::Index1, DMA::Stream2, DMA::Channel5}),
-
-    // index‑1 ─ TIM5  : DMA1 / Stream‑0 / Channel‑6  (unchanged)
+    // index‑1 ─ TIM5  : Motors 1-4
     initIOTimer(Timer::Timer5,  DMA{DMA::Index1, DMA::Stream0, DMA::Channel6}),
 
-    // index‑2 ─ TIM4  : DMA1 / Stream‑6 / Channel‑2  (unchanged)
+    // index‑0 ─ TIM3  : Motors 5-8
+    initIOTimer(Timer::Timer3,  DMA{DMA::Index1, DMA::Stream2, DMA::Channel5}),
+
+    // index‑3 ─ TIM1  : Motors 9‑10
+    initIOTimer(Timer::Timer1,  DMA{DMA::Index1, DMA::Stream1, DMA::Channel0}),
+
+    // index‑4 ─ TIM15 : Motors 11‑12
+    initIOTimer(Timer::Timer15, DMA{DMA::Index1, DMA::Stream4, DMA::Channel0}),
+
+    // index‑2 ─ TIM4  : Motors 13-16
     initIOTimer(Timer::Timer4,  DMA{DMA::Index1, DMA::Stream6, DMA::Channel2}),
-
-    // index‑3 ─ TIM1  : ADVANCED timer for motors 9‑10  (replaces TIM8)
-    //                 Uses DMA1 with DMAMUX‑assigned request; no fixed stream needed.
-    initIOTimer(Timer::Timer1,  DMA{DMA::Index1}),
-
-    // index‑4 ─ TIM15 : Aux 11‑12  (unchanged; software PWM OK if DMA not required)
-    initIOTimer(Timer::Timer8),
-
-    // index‑4 ─ TIM15 : Aux 11‑12  (unchanged; software PWM OK if DMA not required)
-    initIOTimer(Timer::Timer15),
-
-    // index‑5 ─ TIM16 : future / capture  (unchanged)
-    // initIOTimer(Timer::Timer16),
 };
-
 
 constexpr timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
 
@@ -66,27 +58,25 @@ constexpr timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
     initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel3}, {GPIO::PortA, GPIO::Pin2}),
     initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel4}, {GPIO::PortA, GPIO::Pin3}),
 
-    // ─── TIM4 (DMA‑capable GP) : Motors 5‑8 ───────────────────────────────────
+    // ─── TIM3 (DMA‑capable GP) : Motors 5‑8 ───────────────────────────────────
+    initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel1}, {GPIO::PortC, GPIO::Pin6}),
+    initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel2}, {GPIO::PortC, GPIO::Pin7}),
+    initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel3}, {GPIO::PortC, GPIO::Pin8}),
+    initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel4}, {GPIO::PortC, GPIO::Pin9}),
+
+    // ─── TIM1 (advanced) : Motors 9-10 ────────────────────────────────────────
+    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel2}, {GPIO::PortE, GPIO::Pin11}),
+    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel3}, {GPIO::PortA, GPIO::Pin10}),
+
+    // ─── TIM15 : Aux 11-12 ────────────────────────────────────────────────────
+    initIOTimerChannel(io_timers, {Timer::Timer15, Timer::Channel1}, {GPIO::PortE, GPIO::Pin5}),
+    initIOTimerChannel(io_timers, {Timer::Timer15, Timer::Channel2}, {GPIO::PortE, GPIO::Pin6}),
+
+    // ─── TIM4 : Aux / Capture 13‑16 ───────────────────────────────────────────
     initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel1}, {GPIO::PortD, GPIO::Pin12}),
     initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel2}, {GPIO::PortD, GPIO::Pin13}),
     initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel3}, {GPIO::PortD, GPIO::Pin14}),
     initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel4}, {GPIO::PortD, GPIO::Pin15}),
-
-    // ─── TIM1 (advanced) : Motors 9‑10 ────────────────────────────────────────
-    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel2}, {GPIO::PortE, GPIO::Pin11}),
-    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel3}, {GPIO::PortA, GPIO::Pin10}),
-
-    // ─── TIM15 : Aux 11‑12 ────────────────────────────────────────────────────
-    initIOTimerChannel(io_timers, {Timer::Timer15, Timer::Channel1}, {GPIO::PortE, GPIO::Pin5}),
-    initIOTimerChannel(io_timers, {Timer::Timer15, Timer::Channel2}, {GPIO::PortE, GPIO::Pin6}),
-
-    // ─── TIM3 : Aux / Capture 13‑16 ───────────────────────────────────────────
-    initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel3}, {GPIO::PortB, GPIO::Pin0}),
-    initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel4}, {GPIO::PortB, GPIO::Pin1}),
-
-    // ─── TIM8 : Aux / Capture 13‑16 ───────────────────────────────────────────
-    initIOTimerChannel(io_timers, {Timer::Timer8, Timer::Channel3}, {GPIO::PortC, GPIO::Pin8}),
-    initIOTimerChannel(io_timers, {Timer::Timer8, Timer::Channel4}, {GPIO::PortC, GPIO::Pin9}),
 };
 
 constexpr io_timers_channel_mapping_t io_timers_channel_mapping =
