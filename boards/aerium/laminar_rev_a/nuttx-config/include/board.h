@@ -117,8 +117,8 @@
 /* Alternate function pin selections ************************************************/
 
 /* UARTs */
-#define GPIO_USART1_RX	GPIO_USART1_RX_2	/* PB7 (AF7) - console hot-fix */
-#define GPIO_USART1_TX	GPIO_USART1_TX_2	/* PB6 (AF7) - console hot-fix */
+/* USART1 disabled: PB6/PB7 are used by I2C1 (MS4525DO airspeed sensor).
+ * The NSH console is on USART2 (PA2/PA3). */
 
 #define GPIO_USART2_RX	GPIO_USART2_RX_1
 #define GPIO_USART2_TX	GPIO_USART2_TX_1
@@ -140,8 +140,10 @@
 // #define GPIO_MCU_I2C1_SCL
 // #define GPIO_MCU_I2C1_SDA
 
-#define GPIO_I2C2_SCL	GPIO_I2C2_SCL_1
-#define GPIO_I2C2_SDA	GPIO_I2C2_SDA_3
+/* MS4525DO airspeed sensor is on I2C1: SCL=PB6, SDA=PB7 (per schematic).
+ * (I2C2's default SDA_3 maps to PF7, which does not exist on this 48-pin part.) */
+#define GPIO_I2C1_SCL	GPIO_I2C1_SCL_1	/* PB6 */
+#define GPIO_I2C1_SDA	GPIO_I2C1_SDA_1	/* PB7 */
 
 // #define GPIO_I2C1_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN6)
 // #define GPIO_I2C1_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN7)

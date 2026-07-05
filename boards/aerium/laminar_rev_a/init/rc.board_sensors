@@ -2,13 +2,11 @@
 #
 # board sensors init
 #
-# NOTE (bring-up): sensor probing is temporarily disabled. The on-board I2C/SPI
-# sensors are not all populated, and the I2C1 pins (PB6/PB7) were repurposed for
-# the UART console hot-fix, so the MS4525DO / ICM42688P probes stalled boot
-# before it reached 'uavcannode start' -- leaving no console and no CAN node.
-# Re-enable each sensor line below once its hardware is confirmed present.
+# Only sensor populated on this board: MS4525DO differential-pressure (airspeed)
+# on the external I2C bus. Published to CAN via uavcannode (RAW_AIR_DATA).
 #------------------------------------------------------------------------------
-# icm42688p -R 0 -s start
-#
-# (original probe list removed for bring-up; recover from git history:
-#  git show HEAD:boards/aerium/laminar_rev_a/init/rc.board_sensors)
+
+if param compare -s SENS_EN_MS4525DO 1
+then
+	ms4525do start -X
+fi
