@@ -117,8 +117,8 @@
 /* Alternate function pin selections ************************************************/
 
 /* UARTs */
-#define GPIO_USART1_RX	GPIO_USART1_RX_3
-#define GPIO_USART1_TX	GPIO_USART1_TX_2
+#define GPIO_USART1_RX	GPIO_USART1_RX_2	/* PB7 (AF7) - console hot-fix */
+#define GPIO_USART1_TX	GPIO_USART1_TX_2	/* PB6 (AF7) - console hot-fix */
 
 #define GPIO_USART2_RX	GPIO_USART2_RX_1
 #define GPIO_USART2_TX	GPIO_USART2_TX_1
