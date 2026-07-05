@@ -1,0 +1,13 @@
+{
+    "board_id": 1805,
+    "magic": "AERLMNR",
+    "description": "Firmware for the Aerium Laminar board",
+    "image": "",
+    "build_time": 0,
+    "summary": "AeriumLaminar",
+    "version": "0.1",
+    "image_size": 0,
+    "image_maxsize": 2080768,
+    "git_identity": "",
+    "board_revision": 0
+}
