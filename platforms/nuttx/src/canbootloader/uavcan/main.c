@@ -145,7 +145,10 @@ static inline void early_start_the_watch_dog(void)
 
 static inline void app_start_the_watch_dog(void)
 {
-	watchdog_init();
+	/* BRING-UP HACK (aerium laminar_rev_a): IWDG arming disabled so the app can
+	 * run without being fed by uavcannode (which isn't up yet while CAN is being
+	 * brought up). REVERT before shipping / for any other board. */
+	/* watchdog_init(); */
 	watchdog_pet();
 }
 /****************************************************************************

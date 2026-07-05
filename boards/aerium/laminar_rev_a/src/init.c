@@ -118,7 +118,11 @@ __EXPORT void stm32_boardinitialize(void)
 	// Reset all PWM to Low outputs.
 	board_on_reset(-1);
 
-	watchdog_init();
+	// BRING-UP: IWDG disabled. It is armed here (~2 s) but only fed by the
+	// uavcannode task (watchdog_pet() in UavcanNode.cpp). While CAN isn't up,
+	// uavcannode never feeds it, so the board reset-loops every ~2 s before the
+	// console is usable. Re-enable once uavcannode runs.
+	// watchdog_init();
 
 	/* configure pins */
 	const uint32_t gpio[] = PX4_GPIO_INIT_LIST;
