@@ -35,19 +35,19 @@
 
 constexpr io_timers_t io_timers[MAX_IO_TIMERS] = {
     // index‑1 ─ TIM5  : Motors 1-4
-    initIOTimer(Timer::Timer5,  DMA{DMA::Index1, DMA::Stream0, DMA::Channel6}),
+    initIOTimer(Timer::Timer5,  DMA{DMA::Index1}),
 
     // index‑0 ─ TIM3  : Motors 5-8
-    initIOTimer(Timer::Timer3,  DMA{DMA::Index1, DMA::Stream2, DMA::Channel5}),
+    initIOTimer(Timer::Timer3,  DMA{DMA::Index1}),
 
     // index‑3 ─ TIM1  : Motors 9‑10
-    initIOTimer(Timer::Timer1,  DMA{DMA::Index1, DMA::Stream1, DMA::Channel0}),
+    initIOTimer(Timer::Timer1,  DMA{DMA::Index1}),
 
     // index‑4 ─ TIM15 : Motors 11‑12
     initIOTimer(Timer::Timer15),
 
     // index‑2 ─ TIM4  : Motors 13-16
-    initIOTimer(Timer::Timer4,  DMA{DMA::Index1, DMA::Stream6, DMA::Channel2}),
+    initIOTimer(Timer::Timer4,  DMA{DMA::Index1}),
 };
 
 constexpr timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
