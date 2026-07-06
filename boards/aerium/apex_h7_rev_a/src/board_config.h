@@ -55,14 +55,20 @@
 
 #define FLASH_BASED_PARAMS
 
-/* LEDs are driven with push open drain to support Anode to 5V or 3.3V */
+/* The board has a single FMU status LED (active-low) on PA4. */
 
-#define GPIO_nLED_BLUE          /* PB2  */  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN4)
-#define GPIO_nLED_GREEN         /* PB12 */  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN12)
+#define GPIO_nLED_BLUE          /* PA4 nFMU_LED */  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN4)
 
 #define BOARD_HAS_CONTROL_STATUS_LEDS   1
-#define BOARD_ARMED_STATE_LED           0 // Green LED
-#define BOARD_OVERLOAD_LED              0 // Blue LED
+/*
+ * Only one LED on this board, so it is used for the arming status:
+ *   not-ready blink @10Hz, ready-to-arm blink @1Hz, armed solid, failsafe blink.
+ * Both arming macros point at the same (only) LED. No BOARD_OVERLOAD_LED is
+ * defined, otherwise the CPU-overload indicator would force the LED off every
+ * cycle and stomp the arming blink.
+ */
+#define BOARD_ARMED_LED                 0 // nFMU_LED (PA4): solid ON when armed
+#define BOARD_ARMED_STATE_LED           0 // nFMU_LED (PA4): arming-state blink
 
 /*
  * ADC channels
@@ -210,7 +216,6 @@
 		GPIO_CAN2_RX, \
 		GPIO_CAN2_TX, \
 		GPIO_nLED_BLUE, \
-		GPIO_nLED_GREEN, \
 		GPIO_TONE_ALARM_IDLE, \
 	}
 
