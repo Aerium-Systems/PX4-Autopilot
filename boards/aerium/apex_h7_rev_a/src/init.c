@@ -182,7 +182,7 @@ __EXPORT int board_app_initialize(uintptr_t arg)
 	int result = mmcsd_spislotinitialize(CONFIG_NSH_MMCSDMINOR, CONFIG_NSH_MMCSDSLOTNO, spi_dev);
 
 	if (result != OK) {
-		syslog(LOG_ERR, "[boot] Could not bind MMCSD driver, expected on Kakute H7 V2\n");
+		syslog(LOG_ERR, "[boot] Could not bind MMCSD driver (no SD card inserted?)\n");
 	}
 
 	up_udelay(20);

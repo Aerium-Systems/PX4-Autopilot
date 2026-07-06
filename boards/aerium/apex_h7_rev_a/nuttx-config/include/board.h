@@ -1,5 +1,5 @@
 /************************************************************************************
- * nuttx-configs/px4_fmu-v6u/include/board.h
+ * nuttx-configs/aerium/apex_h7_rev_a/include/board.h
  *
  *   Copyright (C) 2016-2019 Gregory Nutt. All rights reserved.
  *   Authors: David Sidrane <david.sidrane@nscdg.com>
@@ -32,8 +32,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ************************************************************************************/
-#ifndef __NUTTX_CONFIG_AERIUM_APEX_H7_REV_B_INCLUDE_BOARD_H
-#define __NUTTX_CONFIG_AERIUM_APEX_H7_REV_B_INCLUDE_BOARD_H
+#ifndef __NUTTX_CONFIG_AERIUM_APEX_H7_REV_A_INCLUDE_BOARD_H
+#define __NUTTX_CONFIG_AERIUM_APEX_H7_REV_A_INCLUDE_BOARD_H
 
 /************************************************************************************
  * Included Files
@@ -361,7 +361,7 @@ CONFIG_STM32H7_UART8=y   → ttyS5
 
 */
 
-// PA9  = VBUS_CONN, PA10 = USB_D_N — USART1 not connected on this board
+// PA9  = VBUS_CONN; USB D-/D+ = PA11/PA12 (PA10 = TIM1_CH3 / motor 10) — USART1 not connected on this board
 // #define GPIO_USART1_RX   GPIO_USART1_RX_2   /* PA10 */
 // #define GPIO_USART1_TX   GPIO_USART1_TX_2   /* PA9  */
 
@@ -461,19 +461,6 @@ CONFIG_STM32H7_UART8=y   → ttyS5
 #define GPIO_OTGFS_DP    (GPIO_OTGFS_DP_0|GPIO_SPEED_100MHz)  /* PA12 */
 #endif
 
-/* SDMMC1 (microSD)
- *
- *      CK    PC12   CMD   PD2   D0   PC8
- *      D1    PC9    D2    PC10  D3   PC11
- */
-
-#define GPIO_SDMMC1_CK   GPIO_SDMMC1_CK_0                     /* PC12 */
-#define GPIO_SDMMC1_CMD  (GPIO_SDMMC1_CMD_0|GPIO_SPEED_50MHz) /* PD2  */
-#define GPIO_SDMMC1_D0   (GPIO_SDMMC1_D0_0|GPIO_SPEED_50MHz)  /* PC8  */
-#define GPIO_SDMMC1_D1   (GPIO_SDMMC1_D1_0|GPIO_SPEED_50MHz)  /* PC9  */
-#define GPIO_SDMMC1_D2   (GPIO_SDMMC1_D2_0|GPIO_SPEED_50MHz)  /* PC10 */
-#define GPIO_SDMMC1_D3   (GPIO_SDMMC1_D3_0|GPIO_SPEED_50MHz)  /* PC11 */
-
 /* ADC channels — analog mode, no slew-rate / speed required */
 
 #define GPIO_ADC123_INP10  GPIO_ADC123_INP10_0               /* PC0 */
@@ -520,4 +507,4 @@ CONFIG_STM32H7_UART8=y   → ttyS5
 // # define PROBE_MARK(n)
 // #endif
 
-#endif  /*__NUTTX_CONFIG_AERIUM_APEX_H7_REV_B_INCLUDE_BOARD_H  */
+#endif  /*__NUTTX_CONFIG_AERIUM_APEX_H7_REV_A_INCLUDE_BOARD_H  */
