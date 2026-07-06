@@ -167,7 +167,7 @@
 /* High-resolution timer */
 /* High‑resolution timer (HRT) --------------------------------------------- */
 #define HRT_TIMER               2   /* use TIM2 for the HRT               */
-#define HRT_TIMER_CHANNEL       3   /* use capture/compare channel 1      */
+#define HRT_TIMER_CHANNEL       3   /* use capture/compare channel 3      */
 
 /* PPM input on TIM2_CH1 (PA15) -------------------------------------------- */
 #define HRT_PPM_CHANNEL		1
@@ -234,15 +234,6 @@ __BEGIN_DECLS
  * Public Functions
  ****************************************************************************************************/
 
-/****************************************************************************
- * Name: stm32_sdio_initialize
- *
- * Description:
- *   Initialize SDIO-based MMC/SD card support
- *
- ****************************************************************************/
-
-int stm32_sdio_initialize(void);
 
 /****************************************************************************************************
  * Name: stm32_spiinitialize
