@@ -12,4 +12,4 @@ dps310 -s start
 # bmp388 -s start
 
 # bmm150 -I -b 2 start
-lis3mdl -I -b 2 start
+lis3mdl -I -b 2 -R 14 start
