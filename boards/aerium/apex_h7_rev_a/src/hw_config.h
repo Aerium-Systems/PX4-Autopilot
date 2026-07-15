@@ -104,8 +104,8 @@
 
 #define OSC_FREQ                       8
 
-#define BOARD_PIN_LED_ACTIVITY         GPIO_nLED_BLUE // BLUE
-#define BOARD_PIN_LED_BOOTLOADER       GPIO_nLED_GREEN // GREEN
+#define BOARD_PIN_LED_ACTIVITY         GPIO_nLED_BLUE // nFMU_LED (PA4) - single LED on this board
+#define BOARD_PIN_LED_BOOTLOADER       GPIO_nLED_BLUE // nFMU_LED (PA4) - single LED on this board
 #define BOARD_LED_ON                   0
 #define BOARD_LED_OFF                  1
 
