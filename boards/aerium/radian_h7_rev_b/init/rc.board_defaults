@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Aerium Radian H7 rev B specific board defaults
+#------------------------------------------------------------------------------
+
+param set-default BAT1_V_DIV 19.1
+param set-default BAT2_V_DIV 19.1
+
+safety_button start
+tone_alarm start
