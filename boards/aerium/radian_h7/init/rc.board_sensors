@@ -6,7 +6,7 @@
 board_adc start
 
 icm42688p -s -R 0 start
-bmi270 -s -R 6 start
+bmi270 -s start
 
 dps310 -s start
 bmp388 -s start
