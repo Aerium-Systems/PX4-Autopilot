@@ -51,7 +51,8 @@ enum MCU_REV {
 	MCU_REV_STM32F4_REV_5 = 0x2003,
 	MCU_REV_STM32F4_REV_B = MCU_REV_STM32F4_REV_5,
 	MCU_REV_STM32H7_REV_X = MCU_REV_STM32F4_REV_3,
-	MCU_REV_STM32H7_REV_V = 0x2003
+	MCU_REV_STM32H7_REV_V = 0x2003,
+	MCU_REV_STM32F412_REV_C = 0x3000
 };
 
 /* Define any issues with the Silicon as lines separated by \n
@@ -69,6 +70,7 @@ enum MCU_REV {
 # define STM32F76xxx_77xxx  0x451
 # define STM32F40x_41x      0x413
 # define STM32F42x_43x      0x419
+# define STM32F412xx        0x441
 # define STM32F103_LD       0x412
 # define STM32F103_MD       0x410
 # define STM32F103_HD       0x414
@@ -107,6 +109,10 @@ int board_mcu_version(char *rev, const char **revstr, const char **errata)
 		*revstr = "STM32F42x";
 		/* Set possible errata */
 		chip_errata = STM32_F4_ERRATA;
+		break;
+
+	case STM32F412xx:
+		*revstr = "STM32F412";
 		break;
 
 	case STM32F103_LD:
@@ -162,6 +168,10 @@ int board_mcu_version(char *rev, const char **revstr, const char **errata)
 		// MCU_REV_STM32H7_REV_V shares the same REV_ID
 		*rev = chip_version == STM32H74xx_75xx ? 'V' : '5';
 		chip_errata = NULL;
+		break;
+
+	case MCU_REV_STM32F412_REV_C:
+		*rev = 'C';
 		break;
 
 	default:
