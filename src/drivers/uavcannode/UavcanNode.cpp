@@ -818,6 +818,16 @@ extern "C" int uavcannode_start(int argc, char *argv[])
 		}
 	}
 
+	// A nonzero CANNODE_NODE_ID overrides dynamic allocation with a fixed node ID.
+	if (node_id == 0) {
+		int32_t fixed_node_id = 0;
+		param_get(param_find("CANNODE_NODE_ID"), &fixed_node_id);
+
+		if (fixed_node_id != 0) {
+			node_id = fixed_node_id;
+		}
+	}
+
 	if (
 #if defined(SUPPORT_ALT_CAN_BOOTLOADER)
 		board_booted_by_px4() &&

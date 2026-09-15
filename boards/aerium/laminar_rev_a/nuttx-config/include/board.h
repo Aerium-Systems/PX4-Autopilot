@@ -118,10 +118,11 @@
 
 /* UARTs */
 /* USART1 disabled: PB6/PB7 are used by I2C1 (MS4525DO airspeed sensor).
- * The NSH console is on USART2 (PA2/PA3). */
+ * USART2 (PA2/PA3) is not used.
+ * The NSH console is on USART6 (PA12/PA11). */
 
-#define GPIO_USART2_RX	GPIO_USART2_RX_1
-#define GPIO_USART2_TX	GPIO_USART2_TX_1
+#define GPIO_USART6_RX	GPIO_USART6_RX_3
+#define GPIO_USART6_TX	GPIO_USART6_TX_3
 
 /* CAN */
 #define GPIO_CAN1_RX	GPIO_CAN1_RX_2

@@ -41,6 +41,20 @@
 PARAM_DEFINE_INT32(CANNODE_BITRATE, 1000000);
 
 /**
+ * UAVCAN fixed node ID
+ *
+ * 0 disables this override and the node performs standard dynamic node ID
+ * allocation (unchanged default behavior). Any other value is used directly
+ * as this node's UAVCAN node ID, skipping dynamic allocation.
+ *
+ * @min 0
+ * @max 127
+ * @reboot_required true
+ * @group UAVCAN
+ */
+PARAM_DEFINE_INT32(CANNODE_NODE_ID, 0);
+
+/**
  * CAN built-in bus termination
  *
  * @boolean
