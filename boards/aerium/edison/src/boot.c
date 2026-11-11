@@ -48,7 +48,6 @@
 #include <arch/board/board.h>
 
 #include <nuttx/board.h>
-#include "led.h"
 
 /************************************************************************************
  * Name: stm32_boardinitialize

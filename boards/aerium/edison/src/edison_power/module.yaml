@@ -105,3 +105,99 @@ parameters:
             min: 0
             max: 254
             default: 0
+
+    - group: Aerium Edison Readouts
+      definitions:
+        EDSN_RD_VIN:
+            description:
+                short: 'Readout: input voltage (read-only)'
+                long: &readout_note |
+                    Live measurement, refreshed once per second so it can be probed as a
+                    parameter (e.g. "uavcan param get <node> EDSN_RD_VIN" on the flight
+                    controller). Kept in RAM only: never autosaved or written by "param save".
+                    Do not set it; a written value is discarded.
+            type: float
+            unit: V
+            decimal: 2
+            default: 0
+            volatile: true
+        EDSN_RD_IIN:
+            description:
+                short: 'Readout: input current (read-only)'
+                long: *readout_note
+            type: float
+            unit: A
+            decimal: 2
+            default: 0
+            volatile: true
+        EDSN_RD_VCCA:
+            description:
+                short: 'Readout: VCC_A rail voltage (read-only)'
+                long: *readout_note
+            type: float
+            unit: V
+            decimal: 2
+            default: 0
+            volatile: true
+        EDSN_RD_VCCB:
+            description:
+                short: 'Readout: VCC_B rail voltage (read-only)'
+                long: *readout_note
+            type: float
+            unit: V
+            decimal: 2
+            default: 0
+            volatile: true
+        EDSN_RD_T1:
+            description:
+                short: 'Readout: TEMP1 temperature (read-only)'
+                long: *readout_note
+            type: float
+            unit: celcius
+            decimal: 1
+            default: 0
+            volatile: true
+        EDSN_RD_T2:
+            description:
+                short: 'Readout: TEMP2 temperature (read-only)'
+                long: *readout_note
+            type: float
+            unit: celcius
+            decimal: 1
+            default: 0
+            volatile: true
+        EDSN_RD_EN_A:
+            description:
+                short: 'Readout: VCC_A enabled (read-only)'
+                long: *readout_note
+            type: boolean
+            default: 0
+            volatile: true
+        EDSN_RD_PG_A:
+            description:
+                short: 'Readout: VCC_A power good, LM5143 PG1 (read-only)'
+                long: *readout_note
+            type: boolean
+            default: 0
+            volatile: true
+        EDSN_RD_EN_B:
+            description:
+                short: 'Readout: VCC_B enabled (read-only)'
+                long: *readout_note
+            type: boolean
+            default: 0
+            volatile: true
+        EDSN_RD_PG_B:
+            description:
+                short: 'Readout: VCC_B power good, LM5143 PG2 (read-only)'
+                long: *readout_note
+            type: boolean
+            default: 0
+            volatile: true
+        EDSN_RD_HOST5V:
+            description:
+                short: 'Readout: HOST_5V present on the CAN connector (read-only)'
+                long: *readout_note
+            type: boolean
+            default: 0
+            volatile: true

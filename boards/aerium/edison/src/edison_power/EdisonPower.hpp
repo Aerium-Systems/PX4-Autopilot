@@ -50,6 +50,7 @@
 #include <px4_platform_common/px4_work_queue/WorkItem.hpp>
 
 #include <drivers/drv_hrt.h>
+#include <lib/parameters/param.h>
 #include <lib/perf/perf_counter.h>
 
 #include <uORB/Subscription.hpp>
@@ -100,12 +101,31 @@ private:
 		bool host_5v{false};
 	};
 
-	// NodeStatus.vendor_specific_status_code bits
+	// Status bits, used for NodeStatus.vendor_specific_status_code
 	static constexpr uint16_t STATUS_EN_A    = 1 << 0;
 	static constexpr uint16_t STATUS_PG_A    = 1 << 1;
 	static constexpr uint16_t STATUS_EN_B    = 1 << 2;
 	static constexpr uint16_t STATUS_PG_B    = 1 << 3;
 	static constexpr uint16_t STATUS_HOST_5V = 1 << 4;
+
+	// Read-only EDSN_RD_* parameters that mirror the live measurements.
+	// Float readouts first, then the 0/1 flags (starting at RD_EN_A).
+	enum Readout : uint8_t {
+		RD_VIN = 0,
+		RD_IIN,
+		RD_VCCA,
+		RD_VCCB,
+		RD_T1,
+		RD_T2,
+		RD_EN_A,
+		RD_PG_A,
+		RD_EN_B,
+		RD_PG_B,
+		RD_HOST5V,
+		RD_COUNT
+	};
+
+	static constexpr hrt_abstime READOUT_INTERVAL{1000000}; // 1 s
 
 	void Run() override;
 
@@ -113,8 +133,11 @@ private:
 	void accumulate(const adc_report_s &adc);
 	Measurements computeAndReset();
 	float ntcToCelsius(float adc_ratio) const;
+	static uint16_t statusBits(const Measurements &m);
 	bool ensurePublishers();
 	void publish(const Measurements &m);
+	void updateReadouts(const Measurements &m);
+	void setReadout(param_t handle, const void *value);
 
 	uORB::SubscriptionCallbackWorkItem _adc_report_sub{this, ORB_ID(adc_report)};
 	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};
@@ -126,7 +149,10 @@ private:
 	float _adc_v_ref{3.3f};
 
 	hrt_abstime _last_publish{0};
+	hrt_abstime _last_readout{0};
 	Measurements _last{};
+
+	param_t _readout_param[RD_COUNT] {};
 
 	// DroneCAN publishers on uavcannode's node, created once that node has a node ID
 	const void *_node_owner{nullptr};

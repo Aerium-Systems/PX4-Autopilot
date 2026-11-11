@@ -4,16 +4,17 @@ CONFIG_BOARD_ROMFSROOT="cannode"
 CONFIG_BOARD_CONSTRAINED_FLASH=y
 CONFIG_BOARD_CONSTRAINED_MEMORY=y
 CONFIG_BOARD_EXTERNAL_METADATA=y
-# Edison is a DroneCAN power board: no sensor ICs, no PWM outputs.
+# Edison is a DroneCAN power board: no sensor ICs, no LEDs on the MCU, no PWM outputs.
 # Analog measurements (input V/I, VCC_A/VCC_B, 2x NTC) are sampled by board_adc
 # and published on CAN by the board-local edison_power module (src/edison_power).
+# The sensors module and the RGB LED drivers are left out on purpose: the shared
+# cannode rcS still calls "sensors start" / "rgbled start", which just print
+# "command not found" at boot.
 CONFIG_DRIVERS_ADC_BOARD_ADC=y
 CONFIG_DRIVERS_BOOTLOADERS=y
-CONFIG_COMMON_LIGHT=y
 CONFIG_DRIVERS_PWM_OUT=n
 CONFIG_BOARD_UAVCAN_INTERFACES=1
 CONFIG_DRIVERS_UAVCANNODE=y
-CONFIG_MODULES_SENSORS=y
 CONFIG_SYSTEMCMDS_I2CDETECT=y
 CONFIG_SYSTEMCMDS_PARAM=y
 CONFIG_SYSTEMCMDS_REBOOT=y

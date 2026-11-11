@@ -40,6 +40,7 @@
 #include <drivers/uavcannode/UavcanNode.hpp>
 
 #include <math.h>
+#include <string.h>
 
 namespace
 {
@@ -63,6 +64,21 @@ constexpr float kNtcT25Kelvin = 25.f + kKelvinAt0C;
 
 constexpr char kModelName[] = "Aerium Edison";
 
+// Must stay in the order of EdisonPower::Readout
+constexpr const char *kReadoutNames[] = {
+	"EDSN_RD_VIN",
+	"EDSN_RD_IIN",
+	"EDSN_RD_VCCA",
+	"EDSN_RD_VCCB",
+	"EDSN_RD_T1",
+	"EDSN_RD_T2",
+	"EDSN_RD_EN_A",
+	"EDSN_RD_PG_A",
+	"EDSN_RD_EN_B",
+	"EDSN_RD_PG_B",
+	"EDSN_RD_HOST5V",
+};
+
 } // namespace
 
 EdisonPower::EdisonPower() :
@@ -70,6 +86,11 @@ EdisonPower::EdisonPower() :
 	WorkItem(MODULE_NAME, px4::wq_configurations::uavcan)
 {
 	static_assert(sizeof(kAdcChannels) / sizeof(kAdcChannels[0]) == ADC_INPUT_COUNT, "ADC channel table size");
+	static_assert(sizeof(kReadoutNames) / sizeof(kReadoutNames[0]) == RD_COUNT, "readout table size");
+
+	for (unsigned i = 0; i < RD_COUNT; i++) {
+		_readout_param[i] = param_find(kReadoutNames[i]);
+	}
 }
 
 EdisonPower::~EdisonPower()
@@ -134,6 +155,11 @@ void EdisonPower::Run()
 		_last_publish = now;
 		_last = computeAndReset();
 		publish(_last);
+
+		if (now - _last_readout >= READOUT_INTERVAL) {
+			_last_readout = now;
+			updateReadouts(_last);
+		}
 	}
 
 	perf_end(_cycle_perf);
@@ -346,13 +372,7 @@ void EdisonPower::publish(const Measurements &m)
 	}
 
 	// EN / PG / HOST_5V -> NodeStatus vendor-specific status code, faults -> node health
-	uint16_t status = 0;
-	status |= m.en_a ? STATUS_EN_A : 0;
-	status |= m.pg_a ? STATUS_PG_A : 0;
-	status |= m.en_b ? STATUS_EN_B : 0;
-	status |= m.pg_b ? STATUS_PG_B : 0;
-	status |= m.host_5v ? STATUS_HOST_5V : 0;
-	node.setVendorSpecificStatusCode(status);
+	node.setVendorSpecificStatusCode(statusBits(m));
 
 	const bool rail_fault = (m.en_a && !m.pg_a) || (m.en_b && !m.pg_b);
 
@@ -368,6 +388,67 @@ void EdisonPower::publish(const Measurements &m)
 	if (errors > 0) {
 		perf_count(_publish_err_perf);
 	}
+}
+
+uint16_t EdisonPower::statusBits(const Measurements &m)
+{
+	uint16_t status = 0;
+	status |= m.en_a ? STATUS_EN_A : 0;
+	status |= m.pg_a ? STATUS_PG_A : 0;
+	status |= m.en_b ? STATUS_EN_B : 0;
+	status |= m.pg_b ? STATUS_PG_B : 0;
+	status |= m.host_5v ? STATUS_HOST_5V : 0;
+	return status;
+}
+
+void EdisonPower::updateReadouts(const Measurements &m)
+{
+	const float values[RD_EN_A] = {m.vin_v, m.iin_a, m.vcc_a_v, m.vcc_b_v, m.temp1_c, m.temp2_c};
+
+	for (unsigned i = 0; i < RD_EN_A; i++) {
+		setReadout(_readout_param[i], &values[i]);
+	}
+
+	const int32_t flags[RD_COUNT - RD_EN_A] = {m.en_a, m.pg_a, m.en_b, m.pg_b, m.host_5v};
+
+	for (unsigned i = RD_EN_A; i < RD_COUNT; i++) {
+		setReadout(_readout_param[i], &flags[i - RD_EN_A]);
+	}
+}
+
+void EdisonPower::setReadout(param_t handle, const void *value)
+{
+	if (handle == PARAM_INVALID) {
+		return;
+	}
+
+	// Readouts are stored as the parameter's runtime default, which lives in RAM only:
+	// no autosave and never part of "param save", so the flash is not written.
+	// A user-set value would hide the readout (and is saved to flash), so drop it.
+	// Floats are compared bitwise so that NaN readouts compare equal, otherwise
+	// the reset (which always autosaves) would run on every update.
+	bool user_override = false;
+
+	if (param_type(handle) == PARAM_TYPE_FLOAT) {
+		float current = 0.f;
+		float runtime_default = 0.f;
+		user_override = (param_get(handle, &current) == PX4_OK)
+				&& (param_get_default_value(handle, &runtime_default) == PX4_OK)
+				&& (memcmp(&current, &runtime_default, sizeof(current)) != 0);
+
+	} else {
+		int32_t current = 0;
+		int32_t runtime_default = 0;
+		user_override = (param_get(handle, &current) == PX4_OK)
+				&& (param_get_default_value(handle, &runtime_default) == PX4_OK)
+				&& (current != runtime_default);
+	}
+
+	if (user_override) {
+		param_reset_no_notification(handle);
+	}
+
+	param_set_default_value(handle, value);
 }
 
 int EdisonPower::print_status()
@@ -428,6 +509,10 @@ Aerium Edison power board monitor. Publishes on DroneCAN:
 - NodeStatus vendor-specific code: bit0 EN_A, bit1 PG_A, bit2 EN_B, bit3 PG_B, bit4 HOST_5V
 
 Rails are switched with EDSN_EN_A / EDSN_EN_B (also settable over DroneCAN).
+The live values are also mirrored once per second into read-only parameters
+(RAM only, never written to flash) so they can be probed from the flight controller,
+e.g. "uavcan param get <node> EDSN_RD_PG_A":
+EDSN_RD_VIN/IIN/VCCA/VCCB/T1/T2 and the 0/1 flags EDSN_RD_EN_A/PG_A/EN_B/PG_B/HOST5V.
 Requires board_adc and uavcannode.
 )DESCR_STR");
 
