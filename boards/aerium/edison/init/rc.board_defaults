@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# board specific defaults
+#------------------------------------------------------------------------------
+
+# Edison measurement scaling and rail enables are EDSN_* parameters
+# (boards/aerium/edison/src/edison_power/module.yaml). Their defaults match
+# the schematic, so nothing needs to be overridden here.

@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# board sensors init
+#
+# Edison has no sensor ICs. board_adc samples the analog inputs
+# (V_SENSE, C_SENSE, VCCA_SENSE, VCCB_SENSE, TEMP1, TEMP2) and edison_power
+# publishes them, plus PG/EN/HOST_5V status, over DroneCAN.
+#------------------------------------------------------------------------------
+
+board_adc start
+
+edison_power start

@@ -1,0 +1,107 @@
+module_name: edison_power
+
+parameters:
+    - group: Aerium Edison
+      definitions:
+        EDSN_EN_A:
+            description:
+                short: Enable output rail VCC_A
+                long: |
+                    Drives LM5143 EN1 (PB12). 1 = rail VCC_A on, 0 = off.
+                    Applied immediately, including when set over DroneCAN.
+            type: boolean
+            default: 1
+        EDSN_EN_B:
+            description:
+                short: Enable output rail VCC_B
+                long: |
+                    Drives LM5143 EN2 (PB14). 1 = rail VCC_B on, 0 = off.
+                    Applied immediately, including when set over DroneCAN.
+            type: boolean
+            default: 1
+        EDSN_RATE:
+            description:
+                short: DroneCAN publish rate
+                long: |
+                    Rate of the BatteryInfo, CircuitStatus and device.Temperature
+                    messages. ADC samples between messages are averaged.
+            type: float
+            unit: Hz
+            min: 1
+            max: 50
+            decimal: 1
+            increment: 1
+            default: 10
+        EDSN_V_DIV:
+            description:
+                short: Input voltage divider ratio
+                long: |
+                    V_SENSE divider (R2 + R5) / R5 = (180k + 10k) / 10k.
+                    Fine-tune to calibrate the reported input voltage.
+            type: float
+            min: 1
+            max: 100
+            decimal: 3
+            increment: 0.01
+            default: 19.0
+        EDSN_A_PER_V:
+            description:
+                short: Input current scale in A per volt
+                long: |
+                    C_SENSE scale = 1 / (R20 * INA241A3 gain) = 1 / (0.2 mOhm * 50 V/V).
+                    Fine-tune to calibrate the reported input current.
+            type: float
+            min: 0.1
+            max: 1000
+            decimal: 2
+            increment: 0.1
+            default: 100.0
+        EDSN_RAIL_DIV:
+            description:
+                short: Output rail voltage divider ratio
+                long: |
+                    VCCA_SENSE / VCCB_SENSE divider (R46 + R49) / R49 = (R50 + R51) / R51
+                    = (180k + 10k) / 10k.
+            type: float
+            min: 1
+            max: 100
+            decimal: 3
+            increment: 0.01
+            default: 19.0
+        EDSN_NTC_B:
+            description:
+                short: NTC thermistor beta constant in kelvin
+                long: |
+                    B25/50 of TH1/TH2 (NTCG103JX103DT1S, 10 kOhm at 25 C,
+                    12 kOhm pull-up). Check against the thermistor datasheet.
+            type: float
+            min: 1000
+            max: 10000
+            decimal: 0
+            increment: 1
+            default: 3380
+        EDSN_T_HOT:
+            description:
+                short: Over-temperature threshold
+                long: |
+                    TEMP1/TEMP2 above this set the device.Temperature OVERHEATING flag
+                    and the node health to WARNING.
+            type: float
+            unit: celcius
+            min: 0
+            max: 150
+            decimal: 1
+            increment: 1
+            default: 85
+        EDSN_ID_BASE:
+            description:
+                short: DroneCAN ID base
+                long: |
+                    BatteryInfo.battery_id = base. CircuitStatus.circuit_id = base (VCC_A)
+                    and base + 1 (VCC_B). device.Temperature.device_id = base (TEMP1)
+                    and base + 1 (TEMP2). Use different values when several Edison
+                    boards share one bus.
+            type: int32
+            min: 0
+            max: 254
+            default: 0
