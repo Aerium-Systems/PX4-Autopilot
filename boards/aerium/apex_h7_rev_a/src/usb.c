@@ -53,13 +53,12 @@
 
 __EXPORT void stm32_usbinitialize(void)
 {
-	/* The OTG FS has an internal soft pull-up */
-
-	/* Configure the OTG FS VBUS sensing GPIO, Power On, and Overcurrent GPIOs */
-
-#ifdef CONFIG_STM32F7_OTGFS
-	stm32_configgpio(GPIO_OTGFS_VBUS);
-#endif
+	/* The OTG FS has an internal soft pull-up.
+	 *
+	 * This board has no dedicated VBUS sensing pin - PA9, which would
+	 * otherwise be the natural VBUS sense pin, is wired to PWM9 (TIM1_CH2)
+	 * instead. There is nothing else to configure here.
+	 */
 }
 
 /************************************************************************************
@@ -75,4 +74,24 @@ __EXPORT void stm32_usbinitialize(void)
 __EXPORT void stm32_usbsuspend(FAR struct usbdev_s *dev, bool resume)
 {
 	uinfo("resume: %d\n", resume);
+}
+
+/************************************************************************************
+ * Name: board_read_VBUS_state
+ *
+ * Description:
+ *   All boards must provide a way to read the state of VBUS, this my be simple
+ *   digital input on a GPIO. Or something more complicated like a Analong input
+ *   or reading a bit from a USB controller register.
+ *
+ *   This board has no dedicated VBUS sense pin. USB is reported as always
+ *   connected (see BOARD_ADC_USB_CONNECTED) so that cdcacm_autostart still
+ *   brings up the USB console/MAVLink link.
+ *
+ * Returns -  0 if connected.
+ *
+ ************************************************************************************/
+int board_read_VBUS_state(void)
+{
+	return BOARD_ADC_USB_CONNECTED ? 0 : 1;
 }

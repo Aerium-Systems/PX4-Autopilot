@@ -351,19 +351,28 @@
 /* Alternate function pin selections ************************************************/
 
 /*
+ * UART7 (TELEM1) is the NuttX debug console. CONFIG_STM32H7_SERIAL_DISABLE_REORDERING
+ * keeps ttySx numbers sequential (in peripheral order) rather than moving the
+ * console to ttyS0:
+ *
+ * CONFIG_STM32H7_USART1=y   -> ttyS0  (RC input, RX-only)
+ * CONFIG_STM32H7_USART2=y   -> ttyS1
+ * CONFIG_STM32H7_USART3=y   -> ttyS2
+ * CONFIG_STM32H7_UART4=y    -> ttyS3
+ * CONFIG_STM32H7_UART5=y    -> ttyS4
+ * CONFIG_STM32H7_UART7=y    -> ttyS5  (debug console, /dev/console)
+ * CONFIG_STM32H7_UART8=y    -> ttyS6
+ */
 
-CONFIG_STM32H7_USART2=y   → ttyS0
-CONFIG_STM32H7_UART3=y    → ttyS1
-CONFIG_STM32H7_UART4=y    → ttyS2
-CONFIG_STM32H7_UART5=y    → ttyS3
-CONFIG_STM32H7_UART7=y   → ttyS4
-CONFIG_STM32H7_UART8=y   → ttyS5
-
-*/
-
-// PA9  = VBUS_CONN; USB D-/D+ = PA11/PA12 (PA10 = TIM1_CH3 / motor 10) — USART1 not connected on this board
-// #define GPIO_USART1_RX   GPIO_USART1_RX_2   /* PA10 */
-// #define GPIO_USART1_TX   GPIO_USART1_TX_2   /* PA9  */
+// PA9 = PWM9 (TIM1_CH2), USB D-/D+ = PA11/PA12, PA10 = USART1_RX (RC input,
+// RX-only on this schematic). USART1_TX has no physical connection on this
+// board, and every USART1_TX alternate is taken (PA9 = PWM9, PB6 = CAN2_TX,
+// PB14 = SPI2_MISO for the ICM-42688-P). The NuttX serial driver
+// unconditionally configures (and on close unconfigures) a TX GPIO, so it is
+// aliased to the RX pin: tx_gpio is configured before rx_gpio, so PA10 always
+// ends up as USART1_RX and no other peripheral's pin is touched.
+#define GPIO_USART1_RX   (GPIO_USART1_RX_2|GPIO_SPEED_100MHz)   /* PA10 */
+#define GPIO_USART1_TX   GPIO_USART1_RX                         /* PA10 (alias, TX unconnected) */
 
 #define GPIO_USART2_RX   (GPIO_USART2_RX_2|GPIO_SPEED_100MHz)   	/* PD6  */
 #define GPIO_USART2_TX   (GPIO_USART2_TX_2|GPIO_SPEED_100MHz)   	/* PD5  */
@@ -418,8 +427,8 @@ CONFIG_STM32H7_UART8=y   → ttyS5
 // #define GPIO_SPI3_MOSI   GPIO_SPI3_MOSI_4               /* PB5  */
 // #define GPIO_SPI3_SCK    ADJ_SLEW_RATE(GPIO_SPI3_SCK_1) /* PB3  */
 
-#define GPIO_SPI4_MISO   (GPIO_SPI4_MISO_1|GPIO_SPEED_50MHz)               /* PE13 */
-#define GPIO_SPI4_MOSI   (GPIO_SPI4_MOSI_1|GPIO_SPEED_50MHz)               /* PE14 */
+#define GPIO_SPI4_MISO   (GPIO_SPI4_MISO_2|GPIO_SPEED_50MHz)               /* PE5  */
+#define GPIO_SPI4_MOSI   (GPIO_SPI4_MOSI_2|GPIO_SPEED_50MHz)               /* PE6  */
 #define GPIO_SPI4_SCK    ADJ_SLEW_RATE(GPIO_SPI4_SCK_2) /* PE2 */
 
 #define GPIO_SPI6_MISO   (GPIO_SPI6_MISO_2|GPIO_SPEED_50MHz)               /* PA6 */
@@ -449,7 +458,8 @@ CONFIG_STM32H7_UART8=y   → ttyS5
  *
  *      OTG_FS_DM                           PA11
  *      OTG_FS_DP                           PA12
- *      VBUS                                PA9
+ *
+ * No dedicated VBUS sense pin on this board - PA9 is PWM9 (TIM1_CH2).
  */
 
 

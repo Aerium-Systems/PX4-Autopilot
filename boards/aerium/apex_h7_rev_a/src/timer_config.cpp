@@ -40,11 +40,8 @@ constexpr io_timers_t io_timers[MAX_IO_TIMERS] = {
     // index‑0 ─ TIM3  : Motors 5-8
     initIOTimer(Timer::Timer3,  DMA{DMA::Index1}),
 
-    // index‑3 ─ TIM1  : Motors 9‑10
+    // index‑3 ─ TIM1  : Motors 9-12
     initIOTimer(Timer::Timer1,  DMA{DMA::Index1}),
-
-    // index‑4 ─ TIM15 : Motors 11‑12
-    initIOTimer(Timer::Timer15),
 
     // index‑2 ─ TIM4  : Motors 13-16
     initIOTimer(Timer::Timer4,  DMA{DMA::Index1}),
@@ -64,13 +61,15 @@ constexpr timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
     initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel3}, {GPIO::PortC, GPIO::Pin8}),
     initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel4}, {GPIO::PortC, GPIO::Pin9}),
 
-    // ─── TIM1 (advanced) : Motors 9-10 ────────────────────────────────────────
+    // ─── TIM1 (advanced) : Motors 9-12 ────────────────────────────────────────
+    // HW NOTE: PWM9 (PA9) and PWM10 (PE11) are both wired to TIM1_CH2 on this
+    // board revision - a known schematic bug to be fixed later by swapping
+    // PA8/PA9 (making PWM9 = PA8/TIM1_CH1). Until then the two outputs are not
+    // independently controllable; this mirrors the real wiring.
+    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel2}, {GPIO::PortA, GPIO::Pin9}),
     initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel2}, {GPIO::PortE, GPIO::Pin11}),
-    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel3}, {GPIO::PortA, GPIO::Pin10}),
-
-    // ─── TIM15 : Aux 11-12 ────────────────────────────────────────────────────
-    initIOTimerChannel(io_timers, {Timer::Timer15, Timer::Channel1}, {GPIO::PortE, GPIO::Pin5}),
-    initIOTimerChannel(io_timers, {Timer::Timer15, Timer::Channel2}, {GPIO::PortE, GPIO::Pin6}),
+    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel3}, {GPIO::PortE, GPIO::Pin13}),
+    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel4}, {GPIO::PortE, GPIO::Pin14}),
 
     // ─── TIM4 : Aux / Capture 13‑16 ───────────────────────────────────────────
     initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel1}, {GPIO::PortD, GPIO::Pin12}),

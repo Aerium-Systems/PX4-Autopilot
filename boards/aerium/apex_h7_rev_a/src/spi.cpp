@@ -37,15 +37,20 @@
 
 constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 	initSPIBus(SPI::Bus::SPI1, {
-		// initSPIDevice(DRV_IMU_DEVTYPE_BMI270, SPI::CS{GPIO::PortD, GPIO::Pin10}, SPI::DRDY{GPIO::PortD, GPIO::Pin11}),
+		// ICM-45686 replaces BMI270 on the same footprint/CS/DRDY pins
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM45686, SPI::CS{GPIO::PortD, GPIO::Pin10}, SPI::DRDY{GPIO::PortD, GPIO::Pin11}),
 		initSPIDevice(DRV_BARO_DEVTYPE_DPS310, SPI::CS{GPIO::PortC, GPIO::Pin14})
 	}),
 	initSPIBus(SPI::Bus::SPI2, {
-		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortE, GPIO::Pin4}, SPI::DRDY{GPIO::PortE, GPIO::Pin15}),
-		// initSPIDevice(DRV_BARO_DEVTYPE_BMP388, SPI::CS{GPIO::PortC, GPIO::Pin13}),
+		// No DRDY: with the PE15 data-ready interrupt enabled the ICM-42688-P stops
+		// responding on SPI2 until reboot. Without it the driver polls the FIFO
+		// (as ArduPilot does on this board) and runs cleanly.
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortE, GPIO::Pin4}),
 	}),
 	initSPIBus(SPI::Bus::SPI4, {
-		initSPIDevice(SPIDEV_MMCSD(0), SPI::CS{GPIO::PortE, GPIO::Pin3})
+		initSPIDevice(SPIDEV_MMCSD(0), SPI::CS{GPIO::PortE, GPIO::Pin3}),
+		// external SPI4 connector CS: no driver, only held high so it can't contend with the SD card
+		initSPIDevice(DRV_DEVTYPE_UNUSED, SPI::CS{GPIO::PortB, GPIO::Pin2}),
 	}),
 	initSPIBusExternal(SPI::Bus::SPI6, {
 		initSPIConfigExternal(SPI::CS{GPIO::PortB, GPIO::Pin0}),

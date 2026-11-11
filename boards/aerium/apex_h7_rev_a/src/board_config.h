@@ -102,7 +102,21 @@
 #define ADC_SCALED_V5_CHANNEL     	 	/* PC4  */  ADC1_CH(4)
 #define ADC_SCALED_VDD_3V3_SENSORS_CHANNEL 	/* PC5  */  ADC1_CH(8)
 
-#define BOARD_ADC_USB_CONNECTED (px4_arch_gpioread(GPIO_OTGFS_VBUS))
+/* PA9 is wired to PWM9 (TIM1_CH2) on this schematic, not USB VBUS sensing -
+ * there is no dedicated VBUS sense pin on this board. Report USB as always
+ * connected rather than always disconnected: cdcacm_autostart (see
+ * CONFIG_DRIVERS_CDCACM_AUTOSTART) gates bringing up the USB CDC-ACM
+ * console/MAVLink link on board_read_VBUS_state(), so reporting "never
+ * connected" would silently prevent the USB console from ever starting.
+ */
+#define BOARD_ADC_USB_CONNECTED 1
+
+/* The bootloader (which shares this header) unconditionally configures a
+ * VBUS GPIO in board_init()/board_deinit() whenever INTERFACE_USB is set, so
+ * GPIO_OTGFS_VBUS must still resolve to something. Point it at PB14, which
+ * is otherwise unused on this board, instead of PA9 (now PWM9).
+ */
+#define GPIO_OTGFS_VBUS		/* PB14 (unconnected) */ (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_50MHz|GPIO_PORTB|GPIO_PIN14)
 
 #define ADC_CHANNELS \
 	((1 << ADC_BATTERY1_VOLTAGE_CHANNEL)	| \
@@ -162,13 +176,6 @@
 
 #define HEATER_OUTPUT_EN(on_true)  px4_arch_gpiowrite(GPIO_HEATER_OUTPUT, (on_true))
 
-/* USB OTG FS
- *
- * PA9  OTG_FS_VBUS VBUS sensing
- */
-// #define GPIO_OTGFS_VBUS         /* PA9 */ (GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_100MHz|GPIO_PORTA|GPIO_PIN9)
-#define GPIO_OTGFS_VBUS  	/* PA9 */ (GPIO_INPUT | GPIO_FLOAT | GPIO_SPEED_50MHz | GPIO_PORTA | GPIO_PIN9)
-
 /* High-resolution timer */
 /* High‑resolution timer (HRT) --------------------------------------------- */
 #define HRT_TIMER               2   /* use TIM2 for the HRT               */
@@ -192,9 +199,10 @@
 /* Enable the FMU to control it if there is no px4io fixme:This should be BOARD_SAFETY_LED(__ontrue) */
 #define GPIO_LED_SAFETY GPIO_nSAFETY_SWITCH_LED_OUT
 
-/* RC Serial port */
-#define RC_SERIAL_PORT          "/dev/ttyS5"
-#define BOARD_SUPPORTS_RC_SERIAL_PORT_OUTPUT
+/* RC Serial port: USART1 (PA10), RX-only on this schematic - no TX output
+ * telemetry (CRSF/GHST) back to the receiver is possible on this port.
+ */
+#define RC_SERIAL_PORT          "/dev/ttyS0"
 
 // #define GPIO_RSSI_IN            /* PC5  */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTC|GPIO_PIN5)
 
@@ -220,7 +228,7 @@
 
 #define BOARD_ENABLE_CONSOLE_BUFFER
 
-#define BOARD_NUM_IO_TIMERS 5
+#define BOARD_NUM_IO_TIMERS 4
 
 __BEGIN_DECLS
 

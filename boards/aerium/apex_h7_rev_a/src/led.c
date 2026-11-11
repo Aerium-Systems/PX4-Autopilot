@@ -64,7 +64,10 @@ __END_DECLS
 
 #  define xlat(p) (p)
 static uint32_t g_ledmap[] = {
-	GPIO_nLED_BLUE,        // index 0: the board's single nFMU_LED (PA4)
+	GPIO_nLED_BLUE,        // index 0 (LED_BLUE): the board's single nFMU_LED (PA4)
+	0,                     // index 1 (LED_RED/LED_AMBER): no second LED on this board
+	0,                     // index 2: unused
+	0,                     // index 3 (LED_GREEN): no third LED on this board
 };
 
 __EXPORT void led_init(void)
