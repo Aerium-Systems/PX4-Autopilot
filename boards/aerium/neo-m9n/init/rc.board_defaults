@@ -1,0 +1,7 @@
+#!/bin/sh
+#
+# board specific defaults
+#------------------------------------------------------------------------------
+
+# No board-specific parameter defaults yet. CAN node settings (CANNODE_BITRATE,
+# CANNODE_NODE_ID, ...) keep their uavcannode defaults.

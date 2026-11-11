@@ -1,0 +1,13 @@
+{
+    "board_id": 1806,
+    "magic": "AERNM9N",
+    "description": "Firmware for the Aerium NEO-M9N CAN GPS board",
+    "image": "",
+    "build_time": 0,
+    "summary": "AeriumNeoM9N",
+    "version": "0.1",
+    "image_size": 0,
+    "image_maxsize": 2080768,
+    "git_identity": "",
+    "board_revision": 0
+}
