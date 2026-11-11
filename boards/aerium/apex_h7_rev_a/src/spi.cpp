@@ -37,8 +37,10 @@
 
 constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 	initSPIBus(SPI::Bus::SPI1, {
-		// U19: schematic symbol is BMI270, the fitted part is an ICM-45686 on the
-		// same footprint (CS = BMI270_CS PD10, DRDY = BMI270_DRDY/INT1 PD11)
+		// U19 footprint (CS = BMI270_CS PD10, DRDY = BMI270_DRDY/INT1 PD11) is
+		// fitted with either a BMI270 (per schematic) or an ICM-45686. Both are
+		// listed on the same CS; rc.board_sensors probes BMI270 first, then ICM-45686.
+		initSPIDevice(DRV_IMU_DEVTYPE_BMI270, SPI::CS{GPIO::PortD, GPIO::Pin10}, SPI::DRDY{GPIO::PortD, GPIO::Pin11}),
 		initSPIDevice(DRV_IMU_DEVTYPE_ICM45686, SPI::CS{GPIO::PortD, GPIO::Pin10}, SPI::DRDY{GPIO::PortD, GPIO::Pin11}),
 		// U12: DPS368 baro (dps310 driver), no DRDY
 		initSPIDevice(DRV_BARO_DEVTYPE_DPS310, SPI::CS{GPIO::PortC, GPIO::Pin14})

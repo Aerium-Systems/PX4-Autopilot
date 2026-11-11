@@ -3,6 +3,12 @@
 # Aerium Apex H7 rev A specific board defaults
 #------------------------------------------------------------------------------
 
+# No UART on this board has RTS/CTS routed to its connector: keep MAVLink
+# hardware flow control off instead of auto-detect on every instance.
+param set-default MAV_0_FLOW_CTRL 0
+param set-default MAV_1_FLOW_CTRL 0
+param set-default MAV_2_FLOW_CTRL 0
+
 # Single power input (J4); no second battery sense on this board
 param set-default BAT1_V_DIV 19.1
 param set-default SENS_EN_THERMAL 1

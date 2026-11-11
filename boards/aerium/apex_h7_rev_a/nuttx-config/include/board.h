@@ -399,7 +399,7 @@
 
 /* SPI
  *
- * SPI1: ICM-45686 (BMI270 footprint U19) + DPS368 baro
+ * SPI1: BMI270 or ICM-45686 (U19, same footprint) + DPS368 baro
  * SPI2: ICM-42688-P
  * SPI4: microSD (SPI mode)
  * SPI6: external SPI connector J14 (+ DNP J15 isolated-sensors header)

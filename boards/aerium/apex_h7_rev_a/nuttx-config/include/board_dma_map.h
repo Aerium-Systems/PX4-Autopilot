@@ -33,13 +33,14 @@
 
 #pragma once
 
-// DMAMUX1
-#define DMAMAP_SPI1_RX    DMAMAP_DMA12_SPI1RX_0 /* DMA1:37 */
-#define DMAMAP_SPI1_TX    DMAMAP_DMA12_SPI1TX_0 /* DMA1:38 */
+// DMAMUX1 -> DMA1 (8 streams) ---------------------------  streams used
+#define DMAMAP_SPI1_RX    DMAMAP_DMA12_SPI1RX_0 /* DMA1:37  BMI270/ICM-45686, DPS368 */  // 1
+#define DMAMAP_SPI1_TX    DMAMAP_DMA12_SPI1TX_0 /* DMA1:38  BMI270/ICM-45686, DPS368 */  // 2
+// Assigned in timer_config.cpp (DMA::Index1 = DMA1), used by DShot:
+// TIM5 UP, TIM3 UP, TIM1 UP, TIM4 UP                                                // 3-6
 
-// #define DMAMAP_SPI2_RX    DMAMAP_DMA12_SPI2RX_0     /* 3  */
-// #define DMAMAP_SPI2_TX    DMAMAP_DMA12_SPI2TX_0     /* 4  */
-
-// DMAMUX2
-#define DMAMAP_SPI4_RX    DMAMAP_DMA12_SPI4RX_1 /* DMA2:83 */
-#define DMAMAP_SPI4_TX    DMAMAP_DMA12_SPI4TX_1 /* DMA2:84 */
+// DMAMUX1 -> DMA2 (8 streams) ---------------------------  streams used
+#define DMAMAP_SPI2_RX    DMAMAP_DMA12_SPI2RX_1 /* DMA2:39  ICM-42688-P */           // 1
+#define DMAMAP_SPI2_TX    DMAMAP_DMA12_SPI2TX_1 /* DMA2:40  ICM-42688-P */           // 2
+#define DMAMAP_SPI4_RX    DMAMAP_DMA12_SPI4RX_1 /* DMA2:83  microSD */               // 3
+#define DMAMAP_SPI4_TX    DMAMAP_DMA12_SPI4TX_1 /* DMA2:84  microSD */               // 4

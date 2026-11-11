@@ -8,8 +8,12 @@ board_adc start
 # ICM-42688-P on SPI2
 icm42688p -R 0 -s start
 
-# ICM-45686 on SPI1 (fitted on the U19 footprint drawn as BMI270 in the schematic)
-icm45686 -R 0 -s start
+# U19 on SPI1: BMI270 (per schematic) or ICM-45686 on the same footprint/CS/DRDY.
+# Probe the BMI270 first; fall back to the ICM-45686.
+if ! bmi270 -R 0 -s -q start
+then
+	icm45686 -R 0 -s start
+fi
 
 # DPS368 baro on SPI1
 dps310 -s start
