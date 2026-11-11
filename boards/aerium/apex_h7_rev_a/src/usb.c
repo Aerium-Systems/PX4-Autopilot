@@ -55,9 +55,9 @@ __EXPORT void stm32_usbinitialize(void)
 {
 	/* The OTG FS has an internal soft pull-up.
 	 *
-	 * This board has no dedicated VBUS sensing pin - PA9, which would
-	 * otherwise be the natural VBUS sense pin, is wired to PWM9 (TIM1_CH2)
-	 * instead. There is nothing else to configure here.
+	 * This board has no VBUS sensing: VBUS_CONN is not routed to the MCU,
+	 * and PA9, which would otherwise be the natural VBUS sense pin, is the
+	 * HEATER output. There is nothing else to configure here.
 	 */
 }
 

@@ -90,11 +90,15 @@
 #define BOOTLOADER_DELAY               5000
 #define INTERFACE_USB                  1
 #define INTERFACE_USB_CONFIG           "/dev/ttyACM0"
-// #define BOARD_VBUS                     MK_GPIO_INPUT(GPIO_OTGFS_VBUS)
+/* No BOARD_VBUS: there is no VBUS sense pin, so the bootloader always waits
+ * BOOTLOADER_DELAY for a USB host before booting the app.
+ */
 
-//#define USE_VBUS_PULL_DOWN
-#define INTERFACE_USART                1
-#define INTERFACE_USART_CONFIG         "/dev/ttyS0,57600"
+/* Serial bootloading is disabled: USART1 has no TX pin, and every other UART
+ * is on a TELEM/GPS connector, where a radio or GPS could feed the bootloader
+ * bytes that look like a sync command and hold the board in the bootloader.
+ */
+#define INTERFACE_USART                0
 #define BOOT_DELAY_ADDRESS             0x000001a0
 #define BOARD_TYPE                     1803
 #define _FLASH_KBYTES                  (*(uint32_t *)0x1FF1E880)
@@ -108,8 +112,6 @@
 #define BOARD_PIN_LED_BOOTLOADER       GPIO_nLED_BLUE // nFMU_LED (PA4) - single LED on this board
 #define BOARD_LED_ON                   0
 #define BOARD_LED_OFF                  1
-
-#define SERIAL_BREAK_DETECT_DISABLED   1
 
 #if !defined(ARCH_SN_MAX_LENGTH)
 # define ARCH_SN_MAX_LENGTH 12
@@ -128,9 +130,9 @@
 #endif
 
 #ifndef BOOT_DEVICES_SELECTION
-#  define BOOT_DEVICES_SELECTION USB0_DEV|SERIAL0_DEV|SERIAL1_DEV
+#  define BOOT_DEVICES_SELECTION USB0_DEV
 #endif
 
 #ifndef BOOT_DEVICES_FILTER_ONUSB
-#  define BOOT_DEVICES_FILTER_ONUSB USB0_DEV|SERIAL0_DEV|SERIAL1_DEV
+#  define BOOT_DEVICES_FILTER_ONUSB USB0_DEV
 #endif

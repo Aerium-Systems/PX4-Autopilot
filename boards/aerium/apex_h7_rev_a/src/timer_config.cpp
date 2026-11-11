@@ -34,44 +34,40 @@
 #include <px4_arch/io_timer_hw_description.h>
 
 constexpr io_timers_t io_timers[MAX_IO_TIMERS] = {
-    // index‑1 ─ TIM5  : Motors 1-4
+    // timer index 0 ─ TIM5 : PWM 1-4  (MAIN connector J2)
     initIOTimer(Timer::Timer5,  DMA{DMA::Index1}),
 
-    // index‑0 ─ TIM3  : Motors 5-8
+    // timer index 1 ─ TIM3 : PWM 5-8  (MAIN connector J2)
     initIOTimer(Timer::Timer3,  DMA{DMA::Index1}),
 
-    // index‑3 ─ TIM1  : Motors 9-12
+    // timer index 2 ─ TIM1 : PWM 9-12 (AUX connector J7)
     initIOTimer(Timer::Timer1,  DMA{DMA::Index1}),
 
-    // index‑2 ─ TIM4  : Motors 13-16
+    // timer index 3 ─ TIM4 : PWM 13-16 (AUX connector J7)
     initIOTimer(Timer::Timer4,  DMA{DMA::Index1}),
 };
 
 constexpr timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
 
-    // ─── TIM5 (32‑bit, DMA‑burst) : Motors 1‑4 ────────────────────────────────
+    // ─── TIM5 (32‑bit, DMA‑burst) : PWM 1‑4 ──────────────────────────────────
     initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel1}, {GPIO::PortA, GPIO::Pin0}),
     initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel2}, {GPIO::PortA, GPIO::Pin1}),
     initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel3}, {GPIO::PortA, GPIO::Pin2}),
     initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel4}, {GPIO::PortA, GPIO::Pin3}),
 
-    // ─── TIM3 (DMA‑capable GP) : Motors 5‑8 ───────────────────────────────────
+    // ─── TIM3 (DMA‑capable GP) : PWM 5‑8 ─────────────────────────────────────
     initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel1}, {GPIO::PortC, GPIO::Pin6}),
     initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel2}, {GPIO::PortC, GPIO::Pin7}),
     initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel3}, {GPIO::PortC, GPIO::Pin8}),
     initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel4}, {GPIO::PortC, GPIO::Pin9}),
 
-    // ─── TIM1 (advanced) : Motors 9-12 ────────────────────────────────────────
-    // HW NOTE: PWM9 (PA9) and PWM10 (PE11) are both wired to TIM1_CH2 on this
-    // board revision - a known schematic bug to be fixed later by swapping
-    // PA8/PA9 (making PWM9 = PA8/TIM1_CH1). Until then the two outputs are not
-    // independently controllable; this mirrors the real wiring.
-    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel2}, {GPIO::PortA, GPIO::Pin9}),
+    // ─── TIM1 (advanced) : PWM 9-12 ──────────────────────────────────────────
+    initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel1}, {GPIO::PortA, GPIO::Pin8}),
     initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel2}, {GPIO::PortE, GPIO::Pin11}),
     initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel3}, {GPIO::PortE, GPIO::Pin13}),
     initIOTimerChannel(io_timers, {Timer::Timer1, Timer::Channel4}, {GPIO::PortE, GPIO::Pin14}),
 
-    // ─── TIM4 : Aux / Capture 13‑16 ───────────────────────────────────────────
+    // ─── TIM4 : PWM 13‑16 ────────────────────────────────────────────────────
     initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel1}, {GPIO::PortD, GPIO::Pin12}),
     initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel2}, {GPIO::PortD, GPIO::Pin13}),
     initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel3}, {GPIO::PortD, GPIO::Pin14}),
@@ -80,24 +76,3 @@ constexpr timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
 
 constexpr io_timers_channel_mapping_t io_timers_channel_mapping =
 	initIOTimerChannelMapping(io_timers, timer_io_channels);
-
-// constexpr io_timers_t led_pwm_timers[MAX_LED_TIMERS] = {
-// 	initIOTimer(Timer::Timer1),
-// };
-
-// #define CCER_C1_NUM_BITS   4
-// #define POLARITY(c)    (GTIM_CCER_CC1P << (((c)-1) * CCER_C1_NUM_BITS))
-// #define DRIVE_TYPE(p)  ((p)|GPIO_OPENDRAIN|GPIO_PULLUP)
-
-// static inline constexpr timer_io_channels_t initIOTimerChannelLED(const io_timers_t io_timers_conf[MAX_LED_TIMERS],
-// 		Timer::TimerChannel timer, GPIO::GPIOPin pin, int ui_polarity)
-// {
-// 	timer_io_channels_t ret = initIOTimerChannel(io_timers_conf, timer, pin);
-// 	ret.gpio_out = DRIVE_TYPE(ret.gpio_out);
-// 	ret.masks = POLARITY(ui_polarity);
-// 	return ret;
-// }
-
-// constexpr timer_io_channels_t led_pwm_channels[MAX_TIMER_LED_CHANNELS] = {
-// 	initIOTimerChannelLED(led_pwm_timers, {Timer::Timer1, Timer::Channel1}, {GPIO::PortA, GPIO::Pin8}, 1),
-// };

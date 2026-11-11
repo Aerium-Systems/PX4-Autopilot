@@ -48,7 +48,6 @@
 #endif
 
 #include "stm32_rcc.h"
-#include "stm32_sdmmc.h"
 
 /************************************************************************************
  * Pre-processor Definitions
@@ -278,32 +277,15 @@
 
 #define BOARD_FLASH_WAITSTATES 2
 
-/* SDMMC definitions ********************************************************/
-
-/* Init 480kHz, freq = PLL1Q/(2*div)  div =  PLL1Q/(2*freq) */
-
-#define STM32_SDMMC_INIT_CLKDIV     (300 << STM32_SDMMC_CLKCR_CLKDIV_SHIFT)
-
-/* 20 MHz Max for now - more reliable on some boards than 25 MHz
- * 20 MHz = PLL1Q/(2*div), div =  PLL1Q/(2*freq), div = 6 = 240 / 40
+/* SD card **************************************************************************/
+/* The microSD slot is wired in SPI mode on SPI4 (CS PE3), not to an SDMMC
+ * peripheral, so no SDMMC clocking is configured here.
  */
 
-#if defined(CONFIG_STM32H7_SDMMC_XDMA) || defined(CONFIG_STM32H7_SDMMC_IDMA)
-#  define STM32_SDMMC_MMCXFR_CLKDIV   (6 << STM32_SDMMC_CLKCR_CLKDIV_SHIFT)
-#else
-#  define STM32_SDMMC_MMCXFR_CLKDIV   (100 << STM32_SDMMC_CLKCR_CLKDIV_SHIFT)
-#endif
-#if defined(CONFIG_STM32H7_SDMMC_XDMA) || defined(CONFIG_STM32H7_SDMMC_IDMA)
-#  define STM32_SDMMC_SDXFR_CLKDIV    (6 << STM32_SDMMC_CLKCR_CLKDIV_SHIFT)
-#else
-#  define STM32_SDMMC_SDXFR_CLKDIV    (100 << STM32_SDMMC_CLKCR_CLKDIV_SHIFT)
-#endif
-
-#define STM32_SDMMC_CLKCR_EDGE      STM32_SDMMC_CLKCR_NEGEDGE
-
 /* LED definitions ******************************************************************/
-/* The board has two, LED_GREEN a Green LED and LED_BLUE a Blue LED,
- * that can be controlled by software.
+/* Only one software-controlled LED is fitted: D4, blue, active-low on PA4
+ * (nFMU_LED). D3 (red) and D22 (green) are DNP. PX4 drives the LED through
+ * src/led.c; the indices below are kept for the NuttX LED API.
  *
  * If CONFIG_ARCH_LEDS is not defined, then the user can control the LEDs in any way.
  * The following definitions are used to access individual LEDs.
@@ -351,33 +333,36 @@
 /* Alternate function pin selections ************************************************/
 
 /*
- * UART7 (TELEM1) is the NuttX debug console. CONFIG_STM32H7_SERIAL_DISABLE_REORDERING
- * keeps ttySx numbers sequential (in peripheral order) rather than moving the
- * console to ttyS0:
+ * Serial ports. There is no NuttX serial console (no debug connector on this
+ * board; use the MAVLink shell or nshterm over USB, and dmesg for boot output).
+ * CONFIG_STM32H7_SERIAL_DISABLE_REORDERING keeps ttySx numbers sequential, in
+ * peripheral order:
  *
- * CONFIG_STM32H7_USART1=y   -> ttyS0  (RC input, RX-only)
- * CONFIG_STM32H7_USART2=y   -> ttyS1
- * CONFIG_STM32H7_USART3=y   -> ttyS2
- * CONFIG_STM32H7_UART4=y    -> ttyS3
- * CONFIG_STM32H7_UART5=y    -> ttyS4
- * CONFIG_STM32H7_UART7=y    -> ttyS5  (debug console, /dev/console)
- * CONFIG_STM32H7_UART8=y    -> ttyS6
+ * CONFIG_STM32H7_USART1=y   -> ttyS0  RC input (PPM connector J18), RX-only
+ * CONFIG_STM32H7_USART2=y   -> ttyS1  TELEM2 (J9)
+ * CONFIG_STM32H7_USART3=y   -> ttyS2  GPS1   (J13)
+ * CONFIG_STM32H7_UART4=y    -> ttyS3  GPS2   (J3)
+ * CONFIG_STM32H7_UART5=y    -> ttyS4  TELEM3 (J11)
+ * CONFIG_STM32H7_UART7=y    -> ttyS5  TELEM1 (J1)
+ * CONFIG_STM32H7_UART8=y    -> ttyS6  TELEM4 (J17)
+ *
+ * The MCU pins for UART2/UART7 RTS/CTS (PD4/PD3, PE9/PE10) are not routed to
+ * any connector (TELEM1/TELEM2 are 4-pin: 5V/TX/RX/GND), so no hardware flow
+ * control is configured.
  */
 
-// PA9 = PWM9 (TIM1_CH2), USB D-/D+ = PA11/PA12, PA10 = USART1_RX (RC input,
-// RX-only on this schematic). USART1_TX has no physical connection on this
-// board, and every USART1_TX alternate is taken (PA9 = PWM9, PB6 = CAN2_TX,
-// PB14 = SPI2_MISO for the ICM-42688-P). The NuttX serial driver
-// unconditionally configures (and on close unconfigures) a TX GPIO, so it is
-// aliased to the RX pin: tx_gpio is configured before rx_gpio, so PA10 always
-// ends up as USART1_RX and no other peripheral's pin is touched.
+// PA10 = USART1_RX (RC input, RX-only on this schematic). USART1_TX has no
+// physical connection on this board, and every USART1_TX alternate is taken
+// (PA9 = HEATER, PB6 = CAN2_TX, PB14 = SPI2_MISO for the ICM-42688-P). The
+// NuttX serial driver unconditionally configures (and on close unconfigures) a
+// TX GPIO, so it is aliased to the RX pin: tx_gpio is configured before
+// rx_gpio, so PA10 always ends up as USART1_RX and no other peripheral's pin
+// is touched.
 #define GPIO_USART1_RX   (GPIO_USART1_RX_2|GPIO_SPEED_100MHz)   /* PA10 */
 #define GPIO_USART1_TX   GPIO_USART1_RX                         /* PA10 (alias, TX unconnected) */
 
 #define GPIO_USART2_RX   (GPIO_USART2_RX_2|GPIO_SPEED_100MHz)   	/* PD6  */
 #define GPIO_USART2_TX   (GPIO_USART2_TX_2|GPIO_SPEED_100MHz)   	/* PD5  */
-#define GPIO_USART2_RTS  GPIO_USART2_RTS_2  	/* PD4  */
-#define GPIO_USART2_CTS  GPIO_USART2_CTS_NSS_2  /* PD3 */
 
 #define GPIO_USART3_RX   (GPIO_USART3_RX_3|GPIO_SPEED_100MHz)   /* PD9  */
 #define GPIO_USART3_TX   (GPIO_USART3_TX_3|GPIO_SPEED_100MHz)   /* PD8  */
@@ -390,15 +375,13 @@
 
 #define GPIO_UART7_RX    (GPIO_UART7_RX_3|GPIO_SPEED_100MHz)    /* PE7  */
 #define GPIO_UART7_TX    (GPIO_UART7_TX_3|GPIO_SPEED_100MHz)    /* PE8  */
-#define GPIO_UART7_RTS   GPIO_UART7_RTS_1   /* PE9  */
-#define GPIO_UART7_CTS   GPIO_UART7_CTS_1   /* PE10 */
 
 #define GPIO_UART8_RX    (GPIO_UART8_RX_1|GPIO_SPEED_100MHz)    /* PE0  */
 #define GPIO_UART8_TX    (GPIO_UART8_TX_1|GPIO_SPEED_100MHz)    /* PE1  */
 
 /* CAN
  *
- * CAN1 is routed to transceiver.
+ * CAN1 is routed to a TCAN332G transceiver (U8, fixed 120R termination) -> J6.
  */
 
 #define GPIO_CAN1_RX     (GPIO_CAN1_RX_3|GPIO_SPEED_50MHz)     /* PD0  */
@@ -406,7 +389,7 @@
 
 /* CAN
  *
- * CAN2 is routed to transceiver.
+ * CAN2 is routed to a TCAN332G transceiver (U15, fixed 120R termination) -> J5.
  */
 
 #define GPIO_CAN2_RX     (GPIO_CAN2_RX_2|GPIO_SPEED_50MHz)     /* PB5  */
@@ -414,7 +397,13 @@
 
 #define ADJ_SLEW_RATE(p) (((p) & ~GPIO_SPEED_MASK) | (GPIO_SPEED_2MHz))
 
-/* SPI */
+/* SPI
+ *
+ * SPI1: ICM-45686 (BMI270 footprint U19) + DPS368 baro
+ * SPI2: ICM-42688-P
+ * SPI4: microSD (SPI mode)
+ * SPI6: external SPI connector J14 (+ DNP J15 isolated-sensors header)
+ */
 #define GPIO_SPI1_MISO   (GPIO_SPI1_MISO_2|GPIO_SPEED_50MHz)               /* PB4  */
 #define GPIO_SPI1_MOSI   (GPIO_SPI1_MOSI_3|GPIO_SPEED_50MHz)               /* PD7  */
 #define GPIO_SPI1_SCK    ADJ_SLEW_RATE(GPIO_SPI1_SCK_2) /* PB3  */
@@ -422,10 +411,6 @@
 #define GPIO_SPI2_MISO   (GPIO_SPI2_MISO_1|GPIO_SPEED_50MHz)               /* PB14 */
 #define GPIO_SPI2_MOSI   (GPIO_SPI2_MOSI_1|GPIO_SPEED_50MHz)               /* PB15 */
 #define GPIO_SPI2_SCK    ADJ_SLEW_RATE(GPIO_SPI2_SCK_4) /* PB13 */
-
-// #define GPIO_SPI3_MISO   GPIO_SPI3_MISO_1               /* PB4  */
-// #define GPIO_SPI3_MOSI   GPIO_SPI3_MOSI_4               /* PB5  */
-// #define GPIO_SPI3_SCK    ADJ_SLEW_RATE(GPIO_SPI3_SCK_1) /* PB3  */
 
 #define GPIO_SPI4_MISO   (GPIO_SPI4_MISO_2|GPIO_SPEED_50MHz)               /* PE5  */
 #define GPIO_SPI4_MOSI   (GPIO_SPI4_MOSI_2|GPIO_SPEED_50MHz)               /* PE6  */
@@ -436,6 +421,9 @@
 #define GPIO_SPI6_SCK    ADJ_SLEW_RATE(GPIO_SPI6_SCK_2) /* PA5 */
 
 /* I2C
+ *
+ *   I2C2: GPS2 connector (J3) + onboard LIS3MDL (0x1E). 2.2k pull-ups.
+ *   I2C4: GPS1 connector (J13) (+ DNP J15). 2.2k pull-ups.
  *
  *   The optional _GPIO configurations allow the I2C driver to manually
  *   reset the bus to clear stuck slaves.  They match the pin configuration,
@@ -459,7 +447,8 @@
  *      OTG_FS_DM                           PA11
  *      OTG_FS_DP                           PA12
  *
- * No dedicated VBUS sense pin on this board - PA9 is PWM9 (TIM1_CH2).
+ * No VBUS sense: VBUS_CONN is not routed to the MCU and PA9 is the HEATER
+ * output. VBUS detection in the OTG core is left disabled.
  */
 
 

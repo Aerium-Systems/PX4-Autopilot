@@ -64,4 +64,7 @@ else()
 			nuttx_drivers
 			px4_layer
 	)
+
+	# Board-local safety_button (active-low button, active-high LED)
+	add_subdirectory(safety_button)
 endif()

@@ -79,66 +79,63 @@
 
 /* ADC defines to be used in sensors.cpp to read from a particular channel */
 #define ADC1_CH(n)                  (n)
-#define ADC3_CH(n)                  (n)
 
-#define BOARD_NUMBER_BRICKS               2
-#define BOARD_ADC_BRICK1_VALID            1
-#define BOARD_ADC_BRICK2_VALID            1
+/* Single power input (J4 Power_A). MAIN_V_SENSE is selected by JP1 between
+ * the external power-module voltage pin and the onboard 18k/1k divider on
+ * MAIN_POWER; MAIN_C_SENSE comes from the external power module only.
+ *
+ * Not used, per the schematic:
+ *   PC2_C/PC3_C (AUX_V_SENSE/AUX_C_SENSE) are not routed off the FCU sheet,
+ *   so there is no second battery input.
+ *   PC4 (BOARD_5V_SENSE): divider R18/R19 is DNP, so the pin only sees C63.
+ *   PC5 (BOARD_3.3V_SENSE) is tied straight to the 3.3V rail, which is also
+ *   the ADC reference (VDDA), so it always reads full scale.
+ */
+#define BOARD_NUMBER_BRICKS               1
+#define BOARD_ADC_BRICK_VALID             1
 
 /* Define GPIO pins used as ADC N.B. Channel numbers must match below  */
 #define PX4_ADC_GPIO  \
-	/* PC0  */  GPIO_ADC123_INP10, \
-	/* PC1  */  GPIO_ADC123_INP11, \
-	/* PC2  */  GPIO_ADC123_INP12, \
-	/* PC3  */  GPIO_ADC12_INP13,	\
-	/* PC4  */  GPIO_ADC12_INP4, \
-	/* PC5  */  GPIO_ADC12_INP8
+	/* PC0 MAIN_V_SENSE */  GPIO_ADC123_INP10, \
+	/* PC1 MAIN_C_SENSE */  GPIO_ADC123_INP11
 
 /* Define Channel numbers must match above GPIO pin IN(n)*/
-#define ADC_BATTERY1_VOLTAGE_CHANNEL     	/* PC0  */  ADC1_CH(10)
-#define ADC_BATTERY1_CURRENT_CHANNEL     	/* PC1  */  ADC1_CH(11)
-#define ADC_BATTERY2_VOLTAGE_CHANNEL     	/* PC2  */  ADC1_CH(12)
-#define ADC_BATTERY2_CURRENT_CHANNEL     	/* PC3  */  ADC1_CH(13)
-#define ADC_SCALED_V5_CHANNEL     	 	/* PC4  */  ADC1_CH(4)
-#define ADC_SCALED_VDD_3V3_SENSORS_CHANNEL 	/* PC5  */  ADC1_CH(8)
+#define ADC_BATTERY_VOLTAGE_CHANNEL      	/* PC0  */  ADC1_CH(10)
+#define ADC_BATTERY_CURRENT_CHANNEL      	/* PC1  */  ADC1_CH(11)
 
-/* PA9 is wired to PWM9 (TIM1_CH2) on this schematic, not USB VBUS sensing -
- * there is no dedicated VBUS sense pin on this board. Report USB as always
+#define ADC_CHANNELS \
+	((1 << ADC_BATTERY_VOLTAGE_CHANNEL)	| \
+	(1 << ADC_BATTERY_CURRENT_CHANNEL))
+
+/* Define Battery 1 Voltage Divider and A per V */
+
+#define BOARD_BATTERY1_V_DIV         (19.1f)     /* measured with the provided PM board (onboard divider is 18k/1k = 19.0) */
+#define BOARD_BATTERY1_A_PER_V       (0.0f)      /* current sense comes from the external power module only */
+
+/* USB VBUS
+ *
+ * VBUS_CONN is not routed to the MCU (R20 DNP) and PA9 is the HEATER output,
+ * so there is no VBUS sensing on this board. The OTG core runs with VBUS
+ * detection disabled (CONFIG_USBDEV_VBUSSENSING not set). Report USB as always
  * connected rather than always disconnected: cdcacm_autostart (see
  * CONFIG_DRIVERS_CDCACM_AUTOSTART) gates bringing up the USB CDC-ACM
  * console/MAVLink link on board_read_VBUS_state(), so reporting "never
- * connected" would silently prevent the USB console from ever starting.
+ * connected" would silently prevent the USB link from ever starting.
  */
 #define BOARD_ADC_USB_CONNECTED 1
 
-/* The bootloader (which shares this header) unconditionally configures a
- * VBUS GPIO in board_init()/board_deinit() whenever INTERFACE_USB is set, so
- * GPIO_OTGFS_VBUS must still resolve to something. Point it at PB14, which
- * is otherwise unused on this board, instead of PA9 (now PWM9).
+/* The bootloader (which shares this header) still references GPIO_OTGFS_VBUS
+ * in board_deinit(), so it must resolve to a harmless pin. PB12 carries the
+ * SPI4_DRDY net, which is not routed off the FCU sheet.
  */
-#define GPIO_OTGFS_VBUS		/* PB14 (unconnected) */ (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_50MHz|GPIO_PORTB|GPIO_PIN14)
+#define BOARD_USB_VBUS_SENSE_DISABLED
+#define GPIO_OTGFS_VBUS		/* PB12 (unrouted) */ (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_50MHz|GPIO_PORTB|GPIO_PIN12)
 
-#define ADC_CHANNELS \
-	((1 << ADC_BATTERY1_VOLTAGE_CHANNEL)	| \
-	(1 << ADC_BATTERY1_CURRENT_CHANNEL)	| \
-	(1 << ADC_BATTERY2_VOLTAGE_CHANNEL)	| \
-	(1 << ADC_BATTERY2_CURRENT_CHANNEL)	| \
-	(1 << ADC_SCALED_V5_CHANNEL)		| \
-	(1 << ADC_SCALED_VDD_3V3_SENSORS_CHANNEL))
-
-// /* Define Battery 1 Voltage Divider and A per V */
-
-#define BOARD_BATTERY1_V_DIV         (19.1f)     /* measured with the provided PM board */
-#define BOARD_BATTERY1_A_PER_V       (0.0f)
-#define BOARD_BATTERY2_V_DIV         (19.1f)     /* measured with the provided PM board */
-#define BOARD_BATTERY2_A_PER_V       (0.0f)
-
-/* CAN Silence
+/* CAN
  *
- * Silent mode control \ ESC Mux select
+ * Both CAN ports use TCAN332G transceivers, which have no silent/standby
+ * control pin, so there are no CAN silent GPIOs.
  */
-
-// #define GPIO_CAN1_SILENT_S0  /* PD3  */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN3)
 
 /* PWM
  */
@@ -147,11 +144,18 @@
 
 #define BOARD_HAS_PWM  DIRECT_PWM_OUTPUT_CHANNELS
 
-/* Spare GPIO */
+/* Spare GPIO
+ *
+ * PB12 (SPI4_DRDY net) and PB2 (SPI4_CS net) are not routed off the FCU sheet.
+ * PC13 (BMP388_CS) and PE12 (SPI6_CS2) only go to the DNP J15 isolated-sensors
+ * header.
+ */
 
-// #define GPIO_PG6                        /* PG6  */  (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN6)
-// #define GPIO_PD15                       /* PD15 */  (GPIO_INPUT|GPIO_FLOAT|GPIO_PORTD|GPIO_PIN15)
-// #define GPIO_PG15                       /* PG15 */  (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTG|GPIO_PIN15)
+/* I2C2 is external (it is also routed to the GPS2 connector), but it carries
+ * the onboard LIS3MDL. px4_i2c_device_external() in i2c.cpp reports that one
+ * device as internal so it gets the board rotation and internal priority.
+ */
+#define BOARD_OVERRIDE_I2C_DEVICE_EXTERNAL
 
 /* Tone‑alarm output on PB9 with TIM17_CH1 ---------------------------------- */
 #define TONE_ALARM_TIMER             17      /* use TIM17               */
@@ -166,13 +170,14 @@
         (GPIO_ALT|GPIO_AF1|GPIO_SPEED_2MHz|GPIO_PUSHPULL|\
          GPIO_PORTB|GPIO_PIN9)
 
-/* HEATER
- * PWM in future
+/* HEATER (simple on/off GPIO) ---------------------------------------------
+ * PA9 drives the gate of Q2 (low-side N-FET switching R27, 25R from 5V).
+ * Active-high; held low from boot via PX4_GPIO_INIT_LIST because the gate
+ * has no pull-down.
  */
-/* HEATER  (simple on/off GPIO ----------------------- */
-#define GPIO_HEATER_OUTPUT   \
+#define GPIO_HEATER_OUTPUT   /* PA9 */ \
         (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|\
-         GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN8)
+         GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN9)
 
 #define HEATER_OUTPUT_EN(on_true)  px4_arch_gpiowrite(GPIO_HEATER_OUTPUT, (on_true))
 
@@ -185,30 +190,35 @@
 #define HRT_PPM_CHANNEL		1
 #define GPIO_PPM_IN             (GPIO_TIM2_CH1IN_2|GPIO_SPEED_50MHz)
 
-/* Safety button ----------------------------------------------------------- */
-#define GPIO_BTN_SAFETY         (GPIO_INPUT|GPIO_PULLDOWN|GPIO_PORTC|GPIO_PIN15)
-
-/* Safety Switch is HW version dependent on having an PX4IO
- * So we init to a benign state with the _INIT definition
- * and provide the the non _INIT one for the driver to make a run time
- * decision to use it.
+/* Safety button -----------------------------------------------------------
+ * J16 is a 2-pin switch between SAFETY_SWITCH_BTN (PC15, via 220R ESD) and
+ * GND, with no external pull-up: use the MCU pull-up, pressed = low.
+ *
+ * The stock safety_button driver assumes an active-high button and an
+ * active-low LED, so this board builds its own copy (src/safety_button) that
+ * honours BOARD_SAFETY_BUTTON_ACTIVE_LOW / BOARD_SAFETY_LED_ACTIVE_HIGH.
+ * Keep CONFIG_DRIVERS_SAFETY_BUTTON disabled in default.px4board.
  */
-#define GPIO_nSAFETY_SWITCH_LED_OUT_INIT   /* PB1 */ (GPIO_INPUT|GPIO_FLOAT|GPIO_PORTB|GPIO_PIN1)
-#define GPIO_nSAFETY_SWITCH_LED_OUT        /* PB1 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN1)
+#define GPIO_BTN_SAFETY         /* PC15 */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTC|GPIO_PIN15)
+#define BOARD_SAFETY_BUTTON_ACTIVE_LOW
 
-/* Enable the FMU to control it if there is no px4io fixme:This should be BOARD_SAFETY_LED(__ontrue) */
-#define GPIO_LED_SAFETY GPIO_nSAFETY_SWITCH_LED_OUT
+/* Safety LED ---------------------------------------------------------------
+ * D9 (red, on the board - J16 has no LED pin) is wired PB1 -> LED -> R70 330R
+ * -> GND, so it is active-high even though the net is named
+ * nSAFETY_SWITCH_LED. Starts off.
+ */
+#define GPIO_LED_SAFETY         /* PB1 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN1)
+#define BOARD_SAFETY_LED_ACTIVE_HIGH
 
-/* RC Serial port: USART1 (PA10), RX-only on this schematic - no TX output
+/* RC input: FMU_PPM_INPUT reaches both PA15 (RC_IN, TIM2_CH1 PPM capture,
+ * via R28 0R) and PA10 (USART1_RX, via R39 0R). USART1 is RX-only - no TX
  * telemetry (CRSF/GHST) back to the receiver is possible on this port.
  */
 #define RC_SERIAL_PORT          "/dev/ttyS0"
 
-// #define GPIO_RSSI_IN            /* PC5  */ (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTC|GPIO_PIN5)
-
-/* SD Card */
-#define SDIO_SLOTNO             0  /* Only one slot */
-#define SDIO_MINOR              0
+/* microSD is wired in SPI mode on SPI4 (CS PE3, no card detect); see init.c
+ * and CONFIG_NSH_MMCSDSPIPORTNO. SDMMC is not used.
+ */
 
 /* This board provides a DMA pool and APIs */
 #define BOARD_DMA_ALLOC_POOL_SIZE 5120
@@ -224,6 +234,9 @@
 		GPIO_CAN2_TX, \
 		GPIO_nLED_BLUE, \
 		GPIO_TONE_ALARM_IDLE, \
+		GPIO_HEATER_OUTPUT, \
+		GPIO_BTN_SAFETY, \
+		GPIO_LED_SAFETY, \
 	}
 
 #define BOARD_ENABLE_CONSOLE_BUFFER

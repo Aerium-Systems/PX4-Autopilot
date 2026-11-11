@@ -3,8 +3,8 @@
 # Aerium Apex H7 rev A specific board defaults
 #------------------------------------------------------------------------------
 
+# Single power input (J4); no second battery sense on this board
 param set-default BAT1_V_DIV 19.1
-param set-default BAT2_V_DIV 19.1
 param set-default SENS_EN_THERMAL 1
 
 # Heater regulates the ICM42688P on SPI2 (device ID 0x260012)

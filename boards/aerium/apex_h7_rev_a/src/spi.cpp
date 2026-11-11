@@ -37,8 +37,10 @@
 
 constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 	initSPIBus(SPI::Bus::SPI1, {
-		// ICM-45686 replaces BMI270 on the same footprint/CS/DRDY pins
+		// U19: schematic symbol is BMI270, the fitted part is an ICM-45686 on the
+		// same footprint (CS = BMI270_CS PD10, DRDY = BMI270_DRDY/INT1 PD11)
 		initSPIDevice(DRV_IMU_DEVTYPE_ICM45686, SPI::CS{GPIO::PortD, GPIO::Pin10}, SPI::DRDY{GPIO::PortD, GPIO::Pin11}),
+		// U12: DPS368 baro (dps310 driver), no DRDY
 		initSPIDevice(DRV_BARO_DEVTYPE_DPS310, SPI::CS{GPIO::PortC, GPIO::Pin14})
 	}),
 	initSPIBus(SPI::Bus::SPI2, {
@@ -48,12 +50,16 @@ constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortE, GPIO::Pin4}),
 	}),
 	initSPIBus(SPI::Bus::SPI4, {
+		// microSD in SPI mode (CS = SDCARD_CS PE3, no card detect)
 		initSPIDevice(SPIDEV_MMCSD(0), SPI::CS{GPIO::PortE, GPIO::Pin3}),
-		// external SPI4 connector CS: no driver, only held high so it can't contend with the SD card
+		// PB2 carries the SPI4_CS net, which is not routed off the FCU sheet
+		// (there is no SPI4 connector). No driver; only held high as a spare CS.
 		initSPIDevice(DRV_DEVTYPE_UNUSED, SPI::CS{GPIO::PortB, GPIO::Pin2}),
 	}),
 	initSPIBusExternal(SPI::Bus::SPI6, {
+		// SPI6_CS1: external SPI connector J14
 		initSPIConfigExternal(SPI::CS{GPIO::PortB, GPIO::Pin0}),
+		// SPI6_CS2: J15 isolated-sensors header (DNP)
 		initSPIConfigExternal(SPI::CS{GPIO::PortE, GPIO::Pin12}),
 	}),
 };

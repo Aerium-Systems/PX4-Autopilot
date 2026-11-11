@@ -33,7 +33,32 @@
 
 #include <px4_arch/i2c_hw_description.h>
 
+#include <drivers/drv_sensor.h>
+#include <lib/drivers/device/Device.hpp>
+#include <px4_platform_common/i2c.h>
+
 constexpr px4_i2c_bus_t px4_i2c_buses[I2C_BUS_MAX_BUS_ITEMS] = {
-	initI2CBusExternal(4),
-	initI2CBusInternal(2),
+	initI2CBusExternal(4), // GPS1 connector (J13)
+	initI2CBusExternal(2), // GPS2 connector (J3) + onboard LIS3MDL
 };
+
+bool px4_i2c_device_external(const uint32_t device_id)
+{
+	// The onboard LIS3MDL (U6, address 0x1E) sits on I2C2, which is also routed
+	// to the GPS2 connector. Report just that device as internal so it gets the
+	// board rotation (SENS_BOARD_ROT) and internal-mag priority; anything else
+	// on I2C2 (e.g. a GPS2 compass) stays external.
+	device::Device::DeviceId device_id_mag{};
+	device_id_mag.devid_s.bus_type = device::Device::DeviceBusType_I2C;
+	device_id_mag.devid_s.bus = 2;
+	device_id_mag.devid_s.address = 0x1e;
+	device_id_mag.devid_s.devtype = DRV_MAG_DEVTYPE_LIS3MDL;
+
+	if (device_id_mag.devid == device_id) {
+		return false;
+	}
+
+	device::Device::DeviceId dev_id{};
+	dev_id.devid = device_id;
+	return px4_i2c_bus_external(dev_id.devid_s.bus);
+}
