@@ -871,6 +871,7 @@ class MavShell:
         return False
 
     def run(self, cmd: str, timeout: float = 6.0) -> Tuple[bool, str]:
+        t_start = time.monotonic()
         self._drain(0.05)
         self._send(cmd + "\n")
         deadline = time.monotonic() + timeout
@@ -891,13 +892,22 @@ class MavShell:
         if out.rstrip(" ").endswith(self.PROMPT.strip()):
             out = out.rstrip(" ")[: -len(self.PROMPT.strip())]
         out = out.rstrip()
-        self.ui.raw(f"nsh> {cmd}" + ("" if done else " (timeout)"), out)
+        self.ui.raw(f"nsh> {cmd}  [{time.monotonic() - t_start:.2f} s{'' if done else ', TIMEOUT: no prompt'}]", out)
+        if not done:
+            # Stop a command that is still running (e.g. listener waiting for
+            # data), otherwise it would swallow the start of the next command.
+            self._send("\x03")
+            self.sync(3.0)
         return done, out
 
-    def param(self, name: str) -> Optional[float]:
-        _, out = self.run(f"param show {name}", 4)
-        m = re.search(r"\b%s\s*\[[^\]]*\]\s*:\s*(-?[0-9.]+)" % re.escape(name), out)
-        return float(m.group(1)) if m else None
+    def params(self, prefix: str, names: List[str]) -> Dict[str, Optional[float]]:
+        """Read several parameters with one 'param show PREFIX*' call."""
+        _, out = self.run(f"param show {prefix}*", 6)
+        vals: Dict[str, Optional[float]] = {}
+        for name in names:
+            m = re.search(r"\b%s\s*\[[^\]]*\]\s*:\s*(-?[0-9.]+)" % re.escape(name), out)
+            vals[name] = float(m.group(1)) if m else None
+        return vals
 
     def close(self):
         try:
@@ -915,13 +925,21 @@ def parse_kv_lines(text: str) -> Dict[str, str]:
     return out
 
 
+def _bridge_key(name: str) -> str:
+    # The section header prints the short name ("Sensor 'gnss':") and the next
+    # line the full one ("name: uavcan_gnss"); both map to "gnss".
+    name = name.strip()
+    return name[len("uavcan_"):] if name.startswith("uavcan_") else name
+
+
 def parse_uavcan_status(text: str) -> Dict:
+    """Bridges are keyed by short name: "gnss", "mag", "gnss_relative", ..."""
     st: Dict = {"running": "Online nodes" in text, "nodes": {}, "bridges": {}, "ifaces": {}}
     section, bridge, iface = None, None, None
     for line in text.splitlines():
         m = re.match(r"^Sensor '([^']+)':", line)
         if m:
-            section, bridge = "sensor", m.group(1)
+            section, bridge = "sensor", _bridge_key(m.group(1))
             st["bridges"].setdefault(bridge, {})
             continue
         m = re.match(r"^CAN(\d+) status:", line)
@@ -1217,6 +1235,8 @@ def connect_pixhawk(port: str, args, ui: UI, timeout: float) -> Tuple[Optional[M
         except Exception as e:  # serial.SerialException, OSError
             last_err = str(e)
             mav.close()
+            if re.search(r"access is denied|not functioning", last_err, re.I):
+                return None, None, last_err  # port busy or USB device broken: waiting does not help
         if time.monotonic() >= deadline:
             return None, None, last_err
         ui.status(f"  waiting for the Pixhawk on {port} ({deadline - time.monotonic():.0f} s): {last_err[:60]}")
@@ -1310,7 +1330,7 @@ def stage_pixhawk(args, ui: UI, res: Results) -> Optional[Tuple[Mav, MavShell]]:
             return None
         res.add(G, "Pixhawk reboot", PASS, f"back on {port} after {time.monotonic() - t0 + 4:.0f} s")
 
-    p = {n: shell.param(n) for n in ("UAVCAN_ENABLE", "UAVCAN_SUB_GPS", "UAVCAN_SUB_MAG", "UAVCAN_BITRATE")}
+    p = shell.params("UAVCAN_", ["UAVCAN_ENABLE", "UAVCAN_SUB_GPS", "UAVCAN_SUB_MAG", "UAVCAN_BITRATE"])
     shown = ", ".join(f"{k}={int(v) if v is not None else '?'}" for k, v in p.items())
     en, sub_gps, sub_mag = p["UAVCAN_ENABLE"], p["UAVCAN_SUB_GPS"], p["UAVCAN_SUB_MAG"]
     if en is None:
@@ -1346,8 +1366,8 @@ def stage_node(args, ui: UI, res: Results, shell: MavShell) -> Tuple[Optional[in
                     "set UAVCAN_ENABLE=2 and reboot the Pixhawk")
             return None, None, None
         online = {n: hm for n, hm in st["nodes"].items() if hm[1] != "OFFLN"}
-        gnss = st["bridges"].get("uavcan_gnss", {})
-        mag = st["bridges"].get("uavcan_mag", {})
+        gnss = st["bridges"].get("gnss", {})
+        mag = st["bridges"].get("mag", {})
         for n, (_, mode) in online.items():
             seen_modes.add(mode)
         if args.node_id is not None:
@@ -1366,7 +1386,7 @@ def stage_node(args, ui: UI, res: Results, shell: MavShell) -> Tuple[Optional[in
         nodes_txt = ", ".join(f"{n} {h}/{m}" + ("" if n in gnss else " no-gnss") + ("" if n in mag else " no-mag")
                               for n, (h, m) in sorted(online.items())) or "none"
         ui.status(f"  waiting for the node ({elapsed:.0f}/{args.node_timeout:.0f} s)  online: {nodes_txt}")
-        t_next = time.monotonic() + 1.5
+        t_next = time.monotonic() + 0.5
         while time.monotonic() < t_next:
             shell._pump(0.1)
     ui.clear_status()
@@ -1374,10 +1394,10 @@ def stage_node(args, ui: UI, res: Results, shell: MavShell) -> Tuple[Optional[in
     ui.info("Online nodes (Node ID, Health, Mode):")
     for n, (h, m) in sorted(st["nodes"].items()):
         tags = []
-        if n in st["bridges"].get("uavcan_gnss", {}):
-            tags.append(f"gnss -> sensor_gps[{st['bridges']['uavcan_gnss'][n]}]")
-        if n in st["bridges"].get("uavcan_mag", {}):
-            tags.append(f"mag -> sensor_mag[{st['bridges']['uavcan_mag'][n]}]")
+        if n in st["bridges"].get("gnss", {}):
+            tags.append(f"gnss -> sensor_gps[{st['bridges']['gnss'][n]}]")
+        if n in st["bridges"].get("mag", {}):
+            tags.append(f"mag -> sensor_mag[{st['bridges']['mag'][n]}]")
         ui.kv(f"  node {n:3d}", f"{h:<5} {MODE_NAMES.get(m, m):<16} {', '.join(tags)}")
     if not st["nodes"]:
         ui.kv("  (none)", "")
@@ -1399,15 +1419,15 @@ def stage_node(args, ui: UI, res: Results, shell: MavShell) -> Tuple[Optional[in
 
     res.unit.node_id = pick
     health, mode = st["nodes"][pick]
-    gnss_i = st["bridges"].get("uavcan_gnss", {}).get(pick)
-    mag_i = st["bridges"].get("uavcan_mag", {}).get(pick)
+    gnss_i = st["bridges"].get("gnss", {}).get(pick)
+    mag_i = st["bridges"].get("mag", {}).get(pick)
     detail = f"node {pick}, health {health}, mode {MODE_NAMES.get(mode, mode)}, after {time.monotonic() - t0:.1f} s"
     if timed_out:
-        missing = [what for what, br in (("GNSS", "uavcan_gnss"), ("compass", "uavcan_mag"))
+        missing = [what for what, br in (("GNSS", "gnss"), ("compass", "mag"))
                    if st["bridges"].get(br, {}).get(pick, -1) < 0]
         if missing:
             detail += f" (timed out waiting for {' and '.join(missing)} data)"
-    multi = [n for n in st["nodes"] if n != pick and (n in st["bridges"].get("uavcan_gnss", {}))]
+    multi = [n for n in st["nodes"] if n != pick and (n in st["bridges"].get("gnss", {}))]
     if mode in ("MAINT", "SW_UPD", "INIT"):
         hint = "node is stuck in the CAN bootloader: the application did not start (image/CRC)"
         if "SW_UPD" in seen_modes:
@@ -1424,17 +1444,14 @@ def stage_node(args, ui: UI, res: Results, shell: MavShell) -> Tuple[Optional[in
     return pick, gnss_i, mag_i
 
 
-def _samples(shell: MavShell, topic: str, inst: int, n: int, gap: float) -> List[Dict[str, str]]:
+def _samples(shell: MavShell, topic: str, inst: int, n: int) -> List[Dict[str, str]]:
+    """Read n consecutive messages with one listener call (it waits for each new one)."""
+    _, text = shell.run(f"listener {topic} -i {inst} -n {n}", 3.0 + 1.5 * n)
     out = []
-    for i in range(n):
-        _, text = shell.run(f"listener {topic} -i {inst} -n 1", 6)
-        f = parse_listener(text)
+    for block in re.split(r"^TOPIC: ", text, flags=re.M)[1:]:
+        f = parse_listener("TOPIC: " + block)
         if f:
             out.append(f)
-        if i + 1 < n:
-            t_end = time.monotonic() + gap
-            while time.monotonic() < t_end:
-                shell._pump(0.05)
     return out
 
 
@@ -1480,7 +1497,7 @@ def stage_gnss(args, ui: UI, res: Results, shell: MavShell, node: int, inst: Opt
                 "Is UAVCAN_SUB_GPS=1? Are the 4 Pixhawk GNSS channels used up (reboot it)?")
         res.skip(G, GNSS_CHECKS[1:], "GNSS not identified")
         return
-    samples = _samples(shell, "sensor_gps", inst, 3, 1.0)
+    samples = _samples(shell, "sensor_gps", inst, 3)
     if not samples:
         res.add(G, GNSS_CHECKS[0], FAIL, f"sensor_gps[{inst}] returned no data")
         res.skip(G, GNSS_CHECKS[1:], "no data")
@@ -1519,7 +1536,7 @@ def stage_gnss(args, ui: UI, res: Results, shell: MavShell, node: int, inst: Opt
             fix = fint(s, "fix_type") or 0
             ui.status(f"  waiting for a 3D fix ({deadline - time.monotonic():.0f} s left): "
                       f"fix {FIX_NAMES.get(fix, fix)}, {fint(s, 'satellites_used') or 0} sats")
-            got = _samples(shell, "sensor_gps", inst, 1, 0)
+            got = _samples(shell, "sensor_gps", inst, 1)
             if got:
                 s = got[0]
                 if has_fix(s):
@@ -1558,7 +1575,7 @@ def stage_compass(args, ui: UI, res: Results, shell: MavShell, node: int, inst: 
                 "Is UAVCAN_SUB_MAG=1? Are the 4 Pixhawk mag channels used up (reboot it)?")
         res.skip(G, MAG_CHECKS[1:], "compass not identified")
         return
-    samples = _samples(shell, "sensor_mag", inst, args.mag_samples, 0.25)
+    samples = _samples(shell, "sensor_mag", inst, args.mag_samples)
     if not samples:
         res.add(G, MAG_CHECKS[0], FAIL, f"sensor_mag[{inst}] returned no data")
         res.skip(G, MAG_CHECKS[1:], "no data")
