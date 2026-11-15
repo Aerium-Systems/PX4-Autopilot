@@ -44,7 +44,7 @@
 #include <stdint.h>
 
 /*
- * Aerium NEO-M9N CAN GPS - STM32F412CGU (CAN_MCU sheet)
+ * Aerium Neo CAN GNSS - STM32F412CGU (CAN_MCU sheet)
  *
  *   PH0/PH1    8 MHz HSE crystal (Y1)
  *   PB8/PB9    CAN1 RX/TX -> TCAN332G (U5). The TCAN332G has no silent/standby

@@ -92,7 +92,7 @@
  *
  */
 #define OPT_WAIT_FOR_GETNODEINFO                    0
-/* The Aerium NEO-M9N has no boot-config jumper (PH0/PH1 are the HSE
+/* The Aerium Neo CAN GNSS has no boot-config jumper (PH0/PH1 are the HSE
  * crystal), so OPT_WAIT_FOR_GETNODEINFO_JUMPER_GPIO is left undefined.
  */
 #define OPT_WAIT_FOR_GETNODEINFO_JUMPER_GPIO_INVERT 1

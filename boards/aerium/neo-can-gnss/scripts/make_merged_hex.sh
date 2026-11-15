@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# Build the canbootloader + application firmware for aerium_neo-m9n and
+# Build the canbootloader + application firmware for aerium_neo-can-gnss and
 # merge them into a single Intel HEX file, for one-shot production flashing
 # of blank boards (e.g. via STM32CubeProgrammer) instead of flashing the
 # bootloader and app as two separate steps.
 #
-# Usage: boards/aerium/neo-m9n/scripts/make_merged_hex.sh
-# Output: build/aerium_neo-m9n_default/aerium_neo-m9n_merged.hex
+# Usage: boards/aerium/neo-can-gnss/scripts/make_merged_hex.sh
+# Output: build/aerium_neo-can-gnss_default/aerium_neo-can-gnss_merged.hex
 
 set -euo pipefail
 
-BOARD=aerium_neo-m9n
+BOARD=aerium_neo-can-gnss
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DIR="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$SRC_DIR"
@@ -30,7 +30,7 @@ MERGED="$OUT_DIR/${BOARD}_merged.hex"
 [ -f "$APP_BIN" ] || { echo "missing patched app binary: $APP_BIN" >&2; exit 1; }
 
 # Application load address, mirrors OPT_APPLICATION_IMAGE_OFFSET in
-# boards/aerium/neo-m9n/src/boot_config.h (OPT_BOOTLOADER_SIZE_IN_K = 64K).
+# boards/aerium/neo-can-gnss/src/boot_config.h (OPT_BOOTLOADER_SIZE_IN_K = 64K).
 APP_ADDR=0x08010000
 
 TMP_BL_HEX="$(mktemp)"
